@@ -1,53 +1,37 @@
-class Book {
-  constructor(title, author, year) {
-    this.title = title;
-    this.author = author;
-    this.year = year;
+class HotelRoom{
+  constructor(num){
+    this.num =num;
+    this.isBooked = false;
+    this.bookedBy = '';
   }
-  showBook() {
-    console.log(`title: ${this.title}, author: ${this.author}`);
+
+  bookRoom(guestName){
+    if(this.isBooked){
+      console.log(`This room ${this.num} is booked`)
+    }else{
+      this.isBooked = true;
+      this.bookedBy = guestName;
+      console.log(`Room ${this.num} booked by ${guestName}`);
+    }
+  }
+
+  checkRoomStatus(){
+    if(this.isBooked){
+      console.log(`This room ${this.num} is booked`)
+    }else{
+      console.log(`Room ${this.num} is available`)
+    }
   }
 }
 
-class EBook extends Book {
-  constructor(title, author, year, fileSize) {
-    super(title, author, year);
-    this.fileSize = fileSize;
-  }
-  downloadFile() {
-    console.log(`Downloading ${this.title} by ${this.author} (${this.fileSize}MB)`);
-  }
-}
+const room1 = new HotelRoom('1');
+const room2 = new HotelRoom('12');
+const room3 = new HotelRoom('15');
 
-// const myBook = new Book("Kobzar", "Taras Shevchenko", 1840);
-// const myEBook = new EBook("Kobzar", "Taras Shevchenko", 1840, 18);
-// myBook.showBook();
-// myEBook.downloadFile();
-// myEBook.showBook();
-// function Book(title, author, year) {
-//   this.title = title;
-//   this.author = author;
-//   this.year = year;
-// }
-
-// Book.prototype.showBook= function() {
-// console.log(`title: ${this.title}, author: ${this.author}`);
-// }
-
-// function EBook(title, author, year, fileSize){
-//   Book.call(this,title, author, year);
-//   this.fileSize= fileSize;
-// }
-// EBook.prototype = Object.create(Book.prototype); 
-// EBook.prototype.constructor = EBook;
-
-// EBook.prototype.downloadFile = function(){
-// console.log(`Downloading ${this.title} by ${this.author} (${this.fileSize}MB)`);
-// }
-
-// const myBook = new Book("Kobzar", "Taras Shevchenko", 1840);
-// const myEBook = new EBook("Kobzar", "Taras Shevchenko", 1840, 18);
-// myBook.showBook();
-// myEBook.downloadFile();
-// myEBook.showBook();
-// Класами простіше робити наслідування і напевно краще за новими стандартами)
+const visitor = 'John Wick';
+room1.bookRoom.call(room1, visitor);
+room2.bookRoom.apply(room2, ['Adel Smith']);
+room3.checkRoomStatus();
+const bookedRoom3 =room3.bookRoom.bind(room3);
+bookedRoom3('john Cena');
+room3.checkRoomStatus();
