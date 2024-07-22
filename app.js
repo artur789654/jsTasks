@@ -1,66 +1,53 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
-
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
-
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
-
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
-
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
-
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
-  });
-}
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
+class Book {
+  constructor(title, author, year) {
+    this.title = title;
+    this.author = author;
+    this.year = year;
+  }
+  showBook() {
+    console.log(`title: ${this.title}, author: ${this.author}`);
   }
 }
-execute();
+
+class EBook extends Book {
+  constructor(title, author, year, fileSize) {
+    super(title, author, year);
+    this.fileSize = fileSize;
+  }
+  downloadFile() {
+    console.log(`Downloading ${this.title} by ${this.author} (${this.fileSize}MB)`);
+  }
+}
+
+// const myBook = new Book("Kobzar", "Taras Shevchenko", 1840);
+// const myEBook = new EBook("Kobzar", "Taras Shevchenko", 1840, 18);
+// myBook.showBook();
+// myEBook.downloadFile();
+// myEBook.showBook();
+// function Book(title, author, year) {
+//   this.title = title;
+//   this.author = author;
+//   this.year = year;
+// }
+
+// Book.prototype.showBook= function() {
+// console.log(`title: ${this.title}, author: ${this.author}`);
+// }
+
+// function EBook(title, author, year, fileSize){
+//   Book.call(this,title, author, year);
+//   this.fileSize= fileSize;
+// }
+// EBook.prototype = Object.create(Book.prototype); 
+// EBook.prototype.constructor = EBook;
+
+// EBook.prototype.downloadFile = function(){
+// console.log(`Downloading ${this.title} by ${this.author} (${this.fileSize}MB)`);
+// }
+
+// const myBook = new Book("Kobzar", "Taras Shevchenko", 1840);
+// const myEBook = new EBook("Kobzar", "Taras Shevchenko", 1840, 18);
+// myBook.showBook();
+// myEBook.downloadFile();
+// myEBook.showBook();
+// Класами простіше робити наслідування і напевно краще за новими стандартами)
