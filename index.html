@@ -7,8 +7,27 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="container">
-    </div>
+    <section>
+      <div class="container">
+        <form id="imageForm">
+          <input type="url" id="imageUrl" placeholder="URL зображення" required>
+          <input type="text" id="imageDescription" placeholder="Опис зображення" required>
+          <button type="submit">Додати зображення</button>
+      </form>
+  
+      <div id="gallery"></div>
+  
+      <div id="lightbox" class="hidden">
+          <span id="prev" class="nav">&#10094;</span>
+          <span id="next" class="nav">&#10095;</span>
+          <div class="lightboxImage-container">
+          <img id="lightboxImage" src="" alt="">
+        </div>
+          <p id="lightboxDescription"></p>
+          <span id="close" class="nav">&#10006;</span>
+      </div>
+      </div>
+    </section>
     <script src="app.js"></script>
   </body>
 </html>
