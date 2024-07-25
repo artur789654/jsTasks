@@ -1,66 +1,76 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("imageForm");
+  const gallery = document.getElementById("gallery");
+  const lightbox = document.getElementById("lightbox");
+  const prevBtn = document.getElementById("prev");
+  const nextBtn = document.getElementById("next");
+  const lightboxImage = document.getElementById("lightboxImage");
+  const lightboxDescription = document.getElementById("lightboxDescription");
+  const close = document.getElementById("close");
 
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
+  let images = JSON.parse(localStorage.getItem("images")) || [];
+  let currentIndex = 0;
 
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
-
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
-
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
-
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
-  });
-}
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
+  function renderGallery() {
+    gallery.innerHTML = "";
+    images.forEach((image, index) => {
+      const item = document.createElement("div");
+      item.classList.add("gallery-item");
+      item.innerHTML = `<img src="${image.imageUrl}" alt="${image.imageDesc}" data-index="${index}"/>
+      <button class = 'delete-btn' data-index='${index}'>X</button>`;
+      gallery.appendChild(item);
+    });
   }
-}
-execute();
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const imageUrl = document.getElementById("imageUrl").value;
+    const imageDesc = document.getElementById("imageDescription").value;
+
+    images.push({ imageUrl, imageDesc });
+    saveImages();
+    renderGallery();
+    form.reset();
+  });
+
+  gallery.addEventListener("click", (e) => {
+    if (e.target.tagName === "IMG") {
+      currentIndex = parseInt(e.target.dataset.index, 10);
+      openLightbox();
+    } else if (e.target.classList.contains("delete-btn")) {
+      const index = parseInt(e.target.dataset.index, 10);
+      images.splice(index, 1);
+      saveImages();
+      renderGallery();
+    }
+  });
+
+  function openLightbox() {
+    const image = images[currentIndex];
+    lightboxImage.src = image.imageUrl;
+    lightboxImage.alt = image.imageDesc;
+    lightboxDescription.textContent = `${currentIndex + 1}/${
+      images.length
+    } ${image.imageDesc}`;
+    lightbox.classList.remove("hidden");
+  }
+
+  close.addEventListener("click", () => {
+    lightbox.classList.add("hidden");
+  });
+
+  prevBtn.addEventListener("click", () => {
+    currentIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+    openLightbox();
+  });
+
+  nextBtn.addEventListener("click", () => {
+    currentIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+    openLightbox();
+  });
+  function saveImages() {
+    localStorage.setItem("images", JSON.stringify(images));
+  }
+  renderGallery();
+});
