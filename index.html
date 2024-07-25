@@ -5,29 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
   </head>
   <body>
     <section>
       <div class="container">
-        <form id="imageForm">
-          <input type="url" id="imageUrl" placeholder="URL зображення" required>
-          <input type="text" id="imageDescription" placeholder="Опис зображення" required>
-          <button type="submit">Додати зображення</button>
-      </form>
-  
-      <div id="gallery"></div>
-  
-      <div id="lightbox" class="hidden">
-          <span id="prev" class="nav">&#10094;</span>
-          <span id="next" class="nav">&#10095;</span>
-          <div class="lightboxImage-container">
-          <img id="lightboxImage" src="" alt="">
+        <div class="calendar-container">
+        <div class="navigation">
+          <button id="prev">←</button>
+          <span id="currentMonthAndYear"></span>
+          <button id="next">→</button>
         </div>
-          <p id="lightboxDescription"></p>
-          <span id="close" class="nav">&#10006;</span>
+        <div id="calendar">
+          
+        </div>
+      </div>
+      <div class="event-container">
+        <div class="event-section">
+          <h2 id="selected-date">Виберіть дату</h2> 
+          <ul id="event-list"></ul>
+        </div>
+        <form id="add-event-form">
+          <input type="text" id="add-event-title" placeholder="Event name" required>
+          <button type="submit">Add event</button>
+        </form>
       </div>
       </div>
     </section>
-    <script src="app.js"></script>
+   
   </body>
 </html>

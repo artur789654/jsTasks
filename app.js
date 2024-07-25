@@ -1,76 +1,131 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("imageForm");
-  const gallery = document.getElementById("gallery");
-  const lightbox = document.getElementById("lightbox");
   const prevBtn = document.getElementById("prev");
   const nextBtn = document.getElementById("next");
-  const lightboxImage = document.getElementById("lightboxImage");
-  const lightboxDescription = document.getElementById("lightboxDescription");
-  const close = document.getElementById("close");
+  const currentMonthAndYear = document.getElementById("currentMonthAndYear");
+  const calendar = document.getElementById("calendar");
+  const selectedDate = document.getElementById("selected-date");
+  const eventList = document.getElementById("event-list");
+  const addEventForm = document.getElementById("add-event-form");
+  const addEventTitle = document.getElementById("add-event-title");
 
-  let images = JSON.parse(localStorage.getItem("images")) || [];
-  let currentIndex = 0;
+  const currentDate = new Date();
 
-  function renderGallery() {
-    gallery.innerHTML = "";
-    images.forEach((image, index) => {
+  const getEventsFromStorage = () => {
+    const events = localStorage.getItem("events");
+    return events ? JSON.parse(events) : {};
+  };
+
+  const saveEventsToStorage = (events) => {
+    localStorage.setItem("events", JSON.stringify(events));
+  };
+
+  const renderCalendar = () => {
+    calendar.innerHTML = "";
+    const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+
+    daysOfWeek.forEach((day) => {
       const item = document.createElement("div");
-      item.classList.add("gallery-item");
-      item.innerHTML = `<img src="${image.imageUrl}" alt="${image.imageDesc}" data-index="${index}"/>
-      <button class = 'delete-btn' data-index='${index}'>X</button>`;
-      gallery.appendChild(item);
+      item.classList.add("calendar-header");
+      item.textContent = day;
+      calendar.appendChild(item);
     });
-  }
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
 
-    const imageUrl = document.getElementById("imageUrl").value;
-    const imageDesc = document.getElementById("imageDescription").value;
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    let startDay = firstDay.getDay();
+    startDay = startDay === 0 ? 6 : startDay - 1;
 
-    images.push({ imageUrl, imageDesc });
-    saveImages();
-    renderGallery();
-    form.reset();
-  });
-
-  gallery.addEventListener("click", (e) => {
-    if (e.target.tagName === "IMG") {
-      currentIndex = parseInt(e.target.dataset.index, 10);
-      openLightbox();
-    } else if (e.target.classList.contains("delete-btn")) {
-      const index = parseInt(e.target.dataset.index, 10);
-      images.splice(index, 1);
-      saveImages();
-      renderGallery();
+    for (let i = 0; i < startDay; i++) {
+      calendar.appendChild(document.createElement("div"));
     }
-  });
 
-  function openLightbox() {
-    const image = images[currentIndex];
-    lightboxImage.src = image.imageUrl;
-    lightboxImage.alt = image.imageDesc;
-    lightboxDescription.textContent = `${currentIndex + 1}/${
-      images.length
-    } ${image.imageDesc}`;
-    lightbox.classList.remove("hidden");
-  }
+    for (let i = 1; i <= daysInMonth; i++) {
+      const day = document.createElement("div");
+      day.classList.add("calendar-day");
+      day.textContent = i;
+      day.dataset.date = `${String(i).padStart(2, 0)}-${String(
+        month + 1
+      ).padStart(2, 0)}-${year}`;
+      day.addEventListener("click", handleDayClick);
+      calendar.appendChild(day);
+    }
+    currentMonthAndYear.innerHTML = `${String(month + 1).padStart(
+      2,
+      0
+    )}-${year}`;
+  };
 
-  close.addEventListener("click", () => {
-    lightbox.classList.add("hidden");
-  });
+  const handleDayClick = (event) => {
+    document.querySelectorAll(".calendar-day.active").forEach((item) => {
+      item.classList.remove("active");
+    });
+    event.target.classList.add("active");
+    const date = event.target.dataset.date;
+    selectedDate.innerText = date;
+    updateEventList(date);
+  };
+
+  const updateEventList = (date) => {
+    eventList.innerHTML = "";
+    const events = getEventsFromStorage();
+    const dayEvents = events[date] || [];
+    dayEvents.forEach((event, index) => {
+      const dayEvent = document.createElement("li");
+      const parEvent = document.createElement("p");
+      parEvent.textContent = event;
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.value = index;
+      deleteBtn.addEventListener("click", (event) => deleteEvent(date, event));
+      dayEvent.appendChild(parEvent);
+      dayEvent.appendChild(deleteBtn);
+      eventList.appendChild(dayEvent);
+    });
+
+    addEventForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (selectedDate.textContent !== "Виберіть дату") {
+        const eventInput = addEventTitle.value.trim();
+        if (!eventInput) {
+          return;
+        }
+        const events = getEventsFromStorage();
+        if (!events[date]) {
+          events[date] = [];
+        }
+        events[date].push(eventInput);
+        saveEventsToStorage(events);
+        addEventTitle.value = "";
+        updateEventList(date);
+      }
+    });
+
+    const deleteEvent = (date, event) => {
+      const events = getEventsFromStorage();
+      const indexDeleteBtn = event.target.value;
+      if (events[date] && indexDeleteBtn !== undefined) {
+        events[date].splice(indexDeleteBtn, 1);
+        if (events[date].length === 0) {
+          delete events[date];
+        }
+      }
+      saveEventsToStorage(events);
+      updateEventList(date);
+    };
+  };
 
   prevBtn.addEventListener("click", () => {
-    currentIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
-    openLightbox();
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
   });
 
   nextBtn.addEventListener("click", () => {
-    currentIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
-    openLightbox();
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
   });
-  function saveImages() {
-    localStorage.setItem("images", JSON.stringify(images));
-  }
-  renderGallery();
+  renderCalendar();
 });
