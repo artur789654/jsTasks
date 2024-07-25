@@ -1,66 +1,131 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
+document.addEventListener("DOMContentLoaded", () => {
+  const prevBtn = document.getElementById("prev");
+  const nextBtn = document.getElementById("next");
+  const currentMonthAndYear = document.getElementById("currentMonthAndYear");
+  const calendar = document.getElementById("calendar");
+  const selectedDate = document.getElementById("selected-date");
+  const eventList = document.getElementById("event-list");
+  const addEventForm = document.getElementById("add-event-form");
+  const addEventTitle = document.getElementById("add-event-title");
 
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
+  const currentDate = new Date();
 
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
+  const getEventsFromStorage = () => {
+    const events = localStorage.getItem("events");
+    return events ? JSON.parse(events) : {};
+  };
 
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
+  const saveEventsToStorage = (events) => {
+    localStorage.setItem("events", JSON.stringify(events));
+  };
 
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
+  const renderCalendar = () => {
+    calendar.innerHTML = "";
+    const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
 
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
+    daysOfWeek.forEach((day) => {
+      const item = document.createElement("div");
+      item.classList.add("calendar-header");
+      item.textContent = day;
+      calendar.appendChild(item);
+    });
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    let startDay = firstDay.getDay();
+    startDay = startDay === 0 ? 6 : startDay - 1;
+
+    for (let i = 0; i < startDay; i++) {
+      calendar.appendChild(document.createElement("div"));
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const day = document.createElement("div");
+      day.classList.add("calendar-day");
+      day.textContent = i;
+      day.dataset.date = `${String(i).padStart(2, 0)}-${String(
+        month + 1
+      ).padStart(2, 0)}-${year}`;
+      day.addEventListener("click", handleDayClick);
+      calendar.appendChild(day);
+    }
+    currentMonthAndYear.innerHTML = `${String(month + 1).padStart(
+      2,
+      0
+    )}-${year}`;
+  };
+
+  const handleDayClick = (event) => {
+    document.querySelectorAll(".calendar-day.active").forEach((item) => {
+      item.classList.remove("active");
+    });
+    event.target.classList.add("active");
+    const date = event.target.dataset.date;
+    selectedDate.innerText = date;
+    updateEventList(date);
+  };
+
+  const updateEventList = (date) => {
+    eventList.innerHTML = "";
+    const events = getEventsFromStorage();
+    const dayEvents = events[date] || [];
+    dayEvents.forEach((event, index) => {
+      const dayEvent = document.createElement("li");
+      const parEvent = document.createElement("p");
+      parEvent.textContent = event;
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.value = index;
+      deleteBtn.addEventListener("click", (event) => deleteEvent(date, event));
+      dayEvent.appendChild(parEvent);
+      dayEvent.appendChild(deleteBtn);
+      eventList.appendChild(dayEvent);
+    });
+
+    addEventForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (selectedDate.textContent !== "Виберіть дату") {
+        const eventInput = addEventTitle.value.trim();
+        if (!eventInput) {
+          return;
+        }
+        const events = getEventsFromStorage();
+        if (!events[date]) {
+          events[date] = [];
+        }
+        events[date].push(eventInput);
+        saveEventsToStorage(events);
+        addEventTitle.value = "";
+        updateEventList(date);
+      }
+    });
+
+    const deleteEvent = (date, event) => {
+      const events = getEventsFromStorage();
+      const indexDeleteBtn = event.target.value;
+      if (events[date] && indexDeleteBtn !== undefined) {
+        events[date].splice(indexDeleteBtn, 1);
+        if (events[date].length === 0) {
+          delete events[date];
+        }
+      }
+      saveEventsToStorage(events);
+      updateEventList(date);
+    };
+  };
+
+  prevBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
   });
-}
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
-  }
-}
-execute();
+
+  nextBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  });
+  renderCalendar();
+});
