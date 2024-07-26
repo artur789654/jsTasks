@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <section>
+      <div class="container">
+        <div class="add-task-container">
+          <form id="addTask">
+            <input type="text" placeholder="Enter a task"  id="addTaskInput"/>
+            <button type="submit">Add task</button>
+          </form>
+          <div class="filter-task-container">
+            <label for="taskFilter" class="custom-select">
+              <select id="taskFilter" name="taskFilter">
+                <option value="all" selected>All</option>
+                <option value="done">Done</option>
+                <option value="not done">Not Done</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div>
+            <ul id="tasks"></ul>
+        </div>
+      </div>      
+    </section>
+  </body>
+</html>

@@ -1,66 +1,85 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
+document.addEventListener("DOMContentLoaded", () => {
+  const addTask = document.getElementById("addTask");
+  const addTaskInput = document.getElementById("addTaskInput");
+  const tasks = document.getElementById("tasks");
+  const taskFilter = document.getElementById("taskFilter");
 
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
+  const getTasksFromStorage = () => {
+    const tasks = localStorage.getItem("tasks");
+    return tasks ? JSON.parse(tasks) : [];
+  };
+  const saveTasksToStorage = (tasks) => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  };
+  const filterTasks = (tasksFromStorage, filter) => {
+    return tasksFromStorage.filter((task) => {
+      if (filter === "all") return true;
+      if (filter === "done") return task.done;
+      if (filter === "not done") return !task.done;
+    });
+  };
 
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
+  const renderTasks = () => {
+    const tasksFromStorage = getTasksFromStorage();
+    tasks.innerHTML = "";
+    const filter = taskFilter.value;
 
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
+    const filteredTasks = filterTasks(tasksFromStorage, filter);
 
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
+    filteredTasks.forEach((task, index) => {
+      const li = document.createElement("li");
+      const par = document.createElement("p");
+      const checkbox = document.createElement("input");
+      const deleteBtn = document.createElement("button");
 
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
+      par.textContent = task.text;
+
+      checkbox.type = "checkbox";
+      checkbox.checked = task.done;
+      checkbox.addEventListener("change", () => toggleTask(task.id));
+
+      deleteBtn.textContent = "delete";
+      deleteBtn.addEventListener("click", () => deleteTask(task.id));
+
+      li.append(checkbox, par, deleteBtn);
+      tasks.appendChild(li);
+    });
+  };
+
+  addTask.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const taskText = addTaskInput.value.trim();
+
+    if (taskText === "") return;
+    const tasksFromStorage = getTasksFromStorage();
+
+    const newTask = {
+      id: new Date().getTime(),
+      text: taskText,
+      done: false,
+    };
+
+    tasksFromStorage.push(newTask);
+    saveTasksToStorage(tasksFromStorage);
+    renderTasks();
+    addTaskInput.value = "";
   });
-}
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
-  }
-}
-execute();
+
+  const toggleTask = (taskId) => {
+    const tasksFromStorage = getTasksFromStorage();
+    const taskIndex = tasksFromStorage.findIndex((task) => task.id === taskId);
+    tasksFromStorage[taskIndex].done = !tasksFromStorage[taskIndex].done;
+    saveTasksToStorage(tasksFromStorage);
+    renderTasks();
+  };
+
+  const deleteTask = (taskId) => {
+    const tasksFromStorage = getTasksFromStorage();
+    const updatedTasks = tasksFromStorage.filter((task) => task.id !== taskId);
+    saveTasksToStorage(updatedTasks);
+    renderTasks();
+  };
+
+  taskFilter.addEventListener("change", renderTasks);
+  renderTasks();
+});
