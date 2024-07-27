@@ -1,0 +1,122 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f7f7f7;
+}
+
+.container {
+  max-width: 600px;
+  margin: 50px auto;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+.add-contact-container form{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+.add-contact-container, .search-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: calc(50% - 10px);
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number]::-ms-clear {
+  display: none;
+}
+button {
+  padding: 10px 15px;
+  background-color: #5cb85c;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+button:hover {
+  background-color: #4cae4c;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.contact-name,
+.contact-phone {
+  flex: 1;
+  padding: 5px 10px;
+}
+
+.edit-btn,
+.delete-btn {
+  background-color: #f0ad4e;
+  margin-left: 5px;
+}
+
+.edit-btn:hover {
+  background-color: #ec971f;
+}
+
+.delete-btn {
+  background-color: #d9534f;
+}
+
+.delete-btn:hover {
+  background-color: #c9302c;
+}
+
+.edit-input {
+  padding: 5px;
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+.save-btn {
+  margin-left: 5px;
+  background-color: #5bc0de;
+}
+
+.save-btn:hover {
+  background-color: #31b0d5;
+}
+
+.cancel-btn {
+  margin-left: 5px;
+  background-color: #999;
+}
+
+.cancel-btn:hover {
+  background-color: #777;
+}
