@@ -10,25 +10,23 @@
   <body>
     <section>
       <div class="container">
-        <div class="add-task-container">
-          <form id="addTask">
-            <input type="text" placeholder="Enter a task"  id="addTaskInput"/>
-            <button type="submit">Add task</button>
+        <div class="add-contact-container">
+          <form id="addContact">
+            <input type="text" placeholder="Enter a name" id="addName" />
+            <input
+              type="number"
+              placeholder="Enter phone number"
+              id="addPhoneNumber" />
+            <button type="submit">Add number</button>
           </form>
-          <div class="filter-task-container">
-            <label for="taskFilter" class="custom-select">
-              <select id="taskFilter" name="taskFilter">
-                <option value="all" selected>All</option>
-                <option value="done">Done</option>
-                <option value="not done">Not Done</option>
-              </select>
-            </label>
-          </div>
+        </div>
+        <div class="search-container">
+          <input type="text" placeholder="search" id="searchInput" />
         </div>
         <div>
-            <ul id="tasks"></ul>
+          <ul id="contacts"></ul>
         </div>
-      </div>      
+      </div>
     </section>
   </body>
 </html>
