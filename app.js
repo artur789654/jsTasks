@@ -1,66 +1,152 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
+document.addEventListener("DOMContentLoaded", () => {
+  const newCommentText = document.getElementById("new-comment-text");
+  const addCommentBtn = document.getElementById("add-comment-btn");
+  const commentsList = document.getElementById("comments-list");
 
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
+  const loadComments = () => {
+    const storageComments = localStorage.getItem("comments");
+    return storageComments ? JSON.parse(storageComments) : [];
+  };
 
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
+  const saveComment = (comments) => {
+    localStorage.setItem("comments", JSON.stringify(comments));
+  };
 
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
+  const renderComments = (comments) => {
+    commentsList.innerHTML = "";
 
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
+    const commentElements = {};
 
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
+    comments.forEach((comment) => {
+      const commentElement = createCommentElement(comment);
+      if (!comment.replyId) {
+        commentsList.appendChild(commentElement);
+      } else {
+        const parrentElement = commentElements[comment.replyId];
+        if (parrentElement) {
+          let nestedList = parrentElement.querySelector(".nested-list");
+          if (!nestedList) {
+            nestedList = document.createElement("div");
+            nestedList.classList.add("nested-list");
+            parrentElement.appendChild(nestedList);
+          }
+          nestedList.appendChild(commentElement);
+        }
+      }
+      commentElements[comment.id] = commentElement;
+    });
+  };
+
+  const createCommentElement = (comment) => {
+    const commentElement = document.createElement("li");
+    commentElement.classList.add("comment");
+    commentElement.dataset.id = comment.id;
+
+    commentElement.innerHTML = `
+    <div class ="comment-header">
+      <span class ="comment-time">${comment.time}</span>
+      <button class="delete-btn">Delete</button>
+    </div>
+    <div class="comment-body">
+      <p>${comment.text}</p>
+    </div>
+    <button class = "reply-btn">Reply</button>
+    <ul class="nested-list"></ul>`;
+
+    const deleteBtn = commentElement.querySelector(".delete-btn");
+    const replyBtn = commentElement.querySelector(".reply-btn");
+
+    deleteBtn.addEventListener("click", () => deleteComment(comment.id));
+    replyBtn.addEventListener("click", () => {
+      if (!commentElement.querySelector(".reply-form")) {
+        const replyForm = createReplyForm(comment.id);
+        commentElement.appendChild(replyForm);
+      }
+    });
+
+    return commentElement;
+  };
+
+  const addComment = (commentText) => {
+    const comments = loadComments();
+
+    const newComment = {
+      id: new Date().getTime(),
+      text: commentText,
+      time: new Date().toLocaleString(),
+      replyId: null,
+    };
+    comments.push(newComment);
+    saveComment(comments);
+    renderComments(comments);
+  };
+
+  const createReplyForm = (parentId) => {
+    const replyForm = document.createElement("div");
+    replyForm.classList.add("reply-form");
+
+    replyForm.innerHTML = `<textarea placeholder="Your reply"></textarea>
+    <button class="send-reply">Reply</button>
+    <button class="cancel-reply">Cancel</button>`;
+
+    const replyTextArea = replyForm.querySelector("textarea");
+    const replyBtn = replyForm.querySelector(".send-reply");
+    const cancelBtn = replyForm.querySelector(".cancel-reply");
+
+    replyTextArea.addEventListener("blur", () => {
+      const replyText = replyTextArea.value.trim();
+      if (!replyText) {
+        replyForm.remove();
+      }
+    });
+    replyBtn.addEventListener("click", () => {
+      const replyText = replyTextArea.value.trim();
+      if (replyText) {
+        addReply(parentId, replyText);
+        replyForm.remove();
+      }
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      replyForm.remove();
+    });
+    return replyForm;
+  };
+
+  const addReply = (parentId, replyText) => {
+    const comments = loadComments();
+
+    const newReply = {
+      id: new Date().getTime(),
+      text: replyText,
+      time: new Date().toLocaleString(),
+      replyId: parentId,
+    };
+
+    comments.push(newReply);
+    saveComment(comments);
+    renderComments(comments);
+  };
+
+  const deleteComment = (commentId) => {
+    const comments = loadComments();
+
+    const updatedComments = comments.filter(
+      (comment) => comment.id !== commentId && comment.replyId !== commentId
+    );
+
+    saveComment(updatedComments);
+    renderComments(updatedComments);
+  };
+
+  addCommentBtn.addEventListener("click", () => {
+    const commentText = newCommentText.value.trim();
+    if (commentText) {
+      addComment(commentText);
+      newCommentText.value = "";
+    }
   });
-}
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
-  }
-}
-execute();
+
+  const comments = loadComments();
+  renderComments(comments);
+});
