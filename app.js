@@ -1,133 +1,152 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const addContact = document.getElementById("addContact");
-  const addName = document.getElementById("addName");
-  const addPhoneNumber = document.getElementById("addPhoneNumber");
-  const searchInput = document.getElementById("searchInput");
-  const contacts = document.getElementById("contacts");
+  const newCommentText = document.getElementById("new-comment-text");
+  const addCommentBtn = document.getElementById("add-comment-btn");
+  const commentsList = document.getElementById("comments-list");
 
-  const getContactsFromStorage = () => {
-    const contacts = localStorage.getItem("contacts");
-    return contacts ? JSON.parse(contacts) : [];
-  };
-  const saveContactsToStorage = (contacts) => {
-    localStorage.setItem("contacts", JSON.stringify(contacts));
+  const loadComments = () => {
+    const storageComments = localStorage.getItem("comments");
+    return storageComments ? JSON.parse(storageComments) : [];
   };
 
-  const renderContacts = () => {
-    const сontactsFromStorage = getContactsFromStorage();
-    contacts.innerHTML = "";
-    const searchValue = searchInput.value.toLowerCase();
+  const saveComment = (comments) => {
+    localStorage.setItem("comments", JSON.stringify(comments));
+  };
 
-    сontactsFromStorage.forEach((contact) => {
-      if (
-        contact.name.toLowerCase().includes(searchValue) ||
-        contact.phone.toString().includes(searchValue)
-      ) {
-        const li = document.createElement("li");
-        const nameSpan = document.createElement("span");
-        const phoneSpan = document.createElement("span");
-        const editBtn = document.createElement("button");
-        const deleteBtn = document.createElement("button");
+  const renderComments = (comments) => {
+    commentsList.innerHTML = "";
 
-        nameSpan.textContent = contact.name;
-        phoneSpan.textContent = contact.phone;
+    const commentElements = {};
 
-        nameSpan.classList.add("contact-name");
-        phoneSpan.classList.add("contact-phone");
-
-        editBtn.textContent = "Edit";
-        editBtn.classList.add("edit-btn");
-        editBtn.addEventListener("click", () => editContact(contact.id));
-
-        deleteBtn.textContent = "delete";
-        deleteBtn.classList.add("delete-btn");
-        deleteBtn.addEventListener("click", () => deleteContact(contact.id));
-
-        li.append(nameSpan, phoneSpan, editBtn, deleteBtn);
-        contacts.appendChild(li);
+    comments.forEach((comment) => {
+      const commentElement = createCommentElement(comment);
+      if (!comment.replyId) {
+        commentsList.appendChild(commentElement);
+      } else {
+        const parrentElement = commentElements[comment.replyId];
+        if (parrentElement) {
+          let nestedList = parrentElement.querySelector(".nested-list");
+          if (!nestedList) {
+            nestedList = document.createElement("div");
+            nestedList.classList.add("nested-list");
+            parrentElement.appendChild(nestedList);
+          }
+          nestedList.appendChild(commentElement);
+        }
       }
+      commentElements[comment.id] = commentElement;
     });
   };
 
-  addContact.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const name = addName.value.trim();
-    const phone = addPhoneNumber.value.trim();
+  const createCommentElement = (comment) => {
+    const commentElement = document.createElement("li");
+    commentElement.classList.add("comment");
+    commentElement.dataset.id = comment.id;
 
-    if (name === "" || phone === "") return;
-    const сontactsFromStorage = getContactsFromStorage();
+    commentElement.innerHTML = `
+    <div class ="comment-header">
+      <span class ="comment-time">${comment.time}</span>
+      <button class="delete-btn">Delete</button>
+    </div>
+    <div class="comment-body">
+      <p>${comment.text}</p>
+    </div>
+    <button class = "reply-btn">Reply</button>
+    <ul class="nested-list"></ul>`;
 
-    const newContact = {
+    const deleteBtn = commentElement.querySelector(".delete-btn");
+    const replyBtn = commentElement.querySelector(".reply-btn");
+
+    deleteBtn.addEventListener("click", () => deleteComment(comment.id));
+    replyBtn.addEventListener("click", () => {
+      if (!commentElement.querySelector(".reply-form")) {
+        const replyForm = createReplyForm(comment.id);
+        commentElement.appendChild(replyForm);
+      }
+    });
+
+    return commentElement;
+  };
+
+  const addComment = (commentText) => {
+    const comments = loadComments();
+
+    const newComment = {
       id: new Date().getTime(),
-      name,
-      phone,
+      text: commentText,
+      time: new Date().toLocaleString(),
+      replyId: null,
+    };
+    comments.push(newComment);
+    saveComment(comments);
+    renderComments(comments);
+  };
+
+  const createReplyForm = (parentId) => {
+    const replyForm = document.createElement("div");
+    replyForm.classList.add("reply-form");
+
+    replyForm.innerHTML = `<textarea placeholder="Your reply"></textarea>
+    <button class="send-reply">Reply</button>
+    <button class="cancel-reply">Cancel</button>`;
+
+    const replyTextArea = replyForm.querySelector("textarea");
+    const replyBtn = replyForm.querySelector(".send-reply");
+    const cancelBtn = replyForm.querySelector(".cancel-reply");
+
+    replyTextArea.addEventListener("blur", () => {
+      const replyText = replyTextArea.value.trim();
+      if (!replyText) {
+        replyForm.remove();
+      }
+    });
+    replyBtn.addEventListener("click", () => {
+      const replyText = replyTextArea.value.trim();
+      if (replyText) {
+        addReply(parentId, replyText);
+        replyForm.remove();
+      }
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      replyForm.remove();
+    });
+    return replyForm;
+  };
+
+  const addReply = (parentId, replyText) => {
+    const comments = loadComments();
+
+    const newReply = {
+      id: new Date().getTime(),
+      text: replyText,
+      time: new Date().toLocaleString(),
+      replyId: parentId,
     };
 
-    сontactsFromStorage.push(newContact);
-    saveContactsToStorage(сontactsFromStorage);
-    renderContacts();
-    addName.value = "";
-    addPhoneNumber.value = "";
+    comments.push(newReply);
+    saveComment(comments);
+    renderComments(comments);
+  };
+
+  const deleteComment = (commentId) => {
+    const comments = loadComments();
+
+    const updatedComments = comments.filter(
+      (comment) => comment.id !== commentId && comment.replyId !== commentId
+    );
+
+    saveComment(updatedComments);
+    renderComments(updatedComments);
+  };
+
+  addCommentBtn.addEventListener("click", () => {
+    const commentText = newCommentText.value.trim();
+    if (commentText) {
+      addComment(commentText);
+      newCommentText.value = "";
+    }
   });
 
-  const editContact = (contactId) => {
-    const сontactsFromStorage = getContactsFromStorage();
-    const contactIndex = сontactsFromStorage.findIndex(
-      (contact) => contact.id === contactId
-    );
-    const contact = сontactsFromStorage[contactIndex];
-
-    const editNameInput = document.createElement("input");
-    const editPhoneInput = document.createElement("input");
-    const saveBtn = document.createElement("button");
-    const cancelBtn = document.createElement("button");
-
-    editNameInput.type = "text";
-    editNameInput.value = contact.name;
-    editNameInput.classList.add("edit-input");
-
-    editPhoneInput.type = "number";
-    editPhoneInput.value = contact.phone;
-    editPhoneInput.classList.add("edit-input");
-
-    saveBtn.textContent = "Save";
-    saveBtn.classList.add("save-btn");
-    saveBtn.addEventListener("click", () =>
-      saveEditedContact(contactId, editNameInput.value, editPhoneInput.value)
-    );
-
-    cancelBtn.textContent = "cancel";
-    cancelBtn.classList.add("cancel-btn");
-    cancelBtn.addEventListener("click", renderContacts);
-
-    const li = contacts.children[contactIndex];
-    li.innerHTML = "";
-    li.append(editNameInput, editPhoneInput, saveBtn, cancelBtn);
-  };
-
-  const saveEditedContact = (id, editNameInput, editPhoneInput) => {
-    const сontactsFromStorage = getContactsFromStorage();
-    const contactIndex = сontactsFromStorage.findIndex(
-      (contact) => contact.id === id
-    );
-
-    сontactsFromStorage[contactIndex].name = editNameInput;
-    сontactsFromStorage[contactIndex].phone = editPhoneInput;
-
-    saveContactsToStorage(сontactsFromStorage);
-    renderContacts();
-  };
-
-  const deleteContact = (contactId) => {
-    const сontactsFromStorage = getContactsFromStorage();
-    const updatedContact = сontactsFromStorage.filter(
-      (contact) => contact.id !== contactId
-    );
-
-    saveContactsToStorage(updatedContact);
-    renderContacts();
-  };
-
-  searchInput.addEventListener("input", renderContacts);
-  renderContacts();
+  const comments = loadComments();
+  renderComments(comments);
 });
