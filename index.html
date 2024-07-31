@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="game-info">
+      <h2>Player</h2>
+      <p>Name: <span id="player-name"></span></p>
+      <p>Health: <span id="player-health"></span></p>
+      <p>Strength: <span id="player-strength"></span></p>
+      <p>Potions: <span id="player-potions"></span></p>
+      <p>Level: <span id="player-level"></span></p>
+      <p>Inventory: <span id="player-inventory"></span></p>
+  </div>
+
+  <div class="game-info">
+      <h2>Monster</h2>
+      <p>Type: <span id="monster-type"></span></p>
+      <p>Health: <span id="monster-health"></span></p>
+      <p>Strength: <span id="monster-strength"></span></p>
+  </div>
+
+  <div class="actions">
+      <button id="attack-button">Attack</button>
+      <button id="use-item-or-heal-button">Use item or heal</button>
+      <button id="reload-button">Reload</button>
+  </div>
+
+  <div class="battle-log" id="battle-log"></div>
+  </body>
+</html>
