@@ -1,135 +1,38 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background-color: #f3f6fb;
-}
-
-.comment-section {
-  max-width: 700px;
-  margin: 0 auto;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  transition: box-shadow 0.3s;
-}
-
-.comment-section:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.comment-form, 
-.reply-form {
-  margin-bottom: 25px;
-  position: relative;
-}
-
-textarea {
-  width: 100%;
-  height: 70px;
-  margin-bottom: 12px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  resize: none;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.3s;
-  font-size: 15px;
-}
-
-textarea:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-weight: 600;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-.comment {
-  margin-bottom: 18px;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background-color: #fafafa;
-  position: relative;
-  transition: background-color 0.3s;
-}
-
-.comment:hover {
-  background-color: #f1f1f1;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.comment-time {
-  font-size: 0.9em;
-  color: #888;
-}
-
-.comment-body {
-  margin-top: 12px;
-  font-size: 1em;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
   color: #333;
-  line-height: 1.6;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.reply-btn {
-  margin-left: 10px;
-  font-size: 0.9em;
-  color: #007bff;
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.game-info {
+  margin-bottom: 20px;
+}
+
+.actions {
+  margin-bottom: 20px;
+}
+
+.actions button {
+  margin-right: 10px;
+  padding: 10px 15px;
+  font-size: 16px;
   cursor: pointer;
-  border: none;
-  background: none;
-  transition: color 0.3s;
 }
 
-.reply-btn:hover {
-  color: #fff;
-}
-
-.delete-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 0.9em;
-  color: #e74c3c;
-  cursor: pointer;
-  border: none;
-  background: none;
-  transition: all 0.3s;
-}
-
-.delete-btn:hover {
-  background-color: #e74c3c;
-  color: #fff;
-}
-
-.nested-comments {
-  margin-left: 20px;
-  border-left: 2px solid #ddd;
-  padding-left: 15px;
-  padding-top: 10px;
+.battle-log {
+  max-height: 400px;
+  white-space: pre-line;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
 }

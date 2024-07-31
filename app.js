@@ -1,152 +1,269 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const newCommentText = document.getElementById("new-comment-text");
-  const addCommentBtn = document.getElementById("add-comment-btn");
-  const commentsList = document.getElementById("comments-list");
+class Player {
+  constructor(name) {
+    this.name = name;
+    this.health = 100;
+    this.strength = 15;
+    this.potions = [];
+    this.maxPotions = 10;
+    this.level = 1;
+    this.inventory = [];
+    this.maxInventory = 5;
+  }
 
-  const loadComments = () => {
-    const storageComments = localStorage.getItem("comments");
-    return storageComments ? JSON.parse(storageComments) : [];
-  };
+  attack(monster) {
+    const damage = Math.floor(Math.random() * this.strength) + 1;
+    monster.health -= damage;
+    return damage;
+  }
 
-  const saveComment = (comments) => {
-    localStorage.setItem("comments", JSON.stringify(comments));
-  };
+  levelUp() {
+    this.level++;
+    this.strength += 15;
+    this.health += 30;
+  }
 
-  const renderComments = (comments) => {
-    commentsList.innerHTML = "";
-
-    const commentElements = {};
-
-    comments.forEach((comment) => {
-      const commentElement = createCommentElement(comment);
-      if (!comment.replyId) {
-        commentsList.appendChild(commentElement);
-      } else {
-        const parrentElement = commentElements[comment.replyId];
-        if (parrentElement) {
-          let nestedList = parrentElement.querySelector(".nested-list");
-          if (!nestedList) {
-            nestedList = document.createElement("div");
-            nestedList.classList.add("nested-list");
-            parrentElement.appendChild(nestedList);
-          }
-          nestedList.appendChild(commentElement);
-        }
+  addItemOrPotion(item) {
+    if (item.type === "potion") {
+      if (this.potions.length < this.maxPotions) {
+        this.potions.push(item);
+        return true;
       }
-      commentElements[comment.id] = commentElement;
-    });
-  };
-
-  const createCommentElement = (comment) => {
-    const commentElement = document.createElement("li");
-    commentElement.classList.add("comment");
-    commentElement.dataset.id = comment.id;
-
-    commentElement.innerHTML = `
-    <div class ="comment-header">
-      <span class ="comment-time">${comment.time}</span>
-      <button class="delete-btn">Delete</button>
-    </div>
-    <div class="comment-body">
-      <p>${comment.text}</p>
-    </div>
-    <button class = "reply-btn">Reply</button>
-    <ul class="nested-list"></ul>`;
-
-    const deleteBtn = commentElement.querySelector(".delete-btn");
-    const replyBtn = commentElement.querySelector(".reply-btn");
-
-    deleteBtn.addEventListener("click", () => deleteComment(comment.id));
-    replyBtn.addEventListener("click", () => {
-      if (!commentElement.querySelector(".reply-form")) {
-        const replyForm = createReplyForm(comment.id);
-        commentElement.appendChild(replyForm);
+    } else {
+      if (this.inventory.length < this.maxInventory) {
+        this.inventory.push(item);
+        return true;
       }
-    });
-
-    return commentElement;
-  };
-
-  const addComment = (commentText) => {
-    const comments = loadComments();
-
-    const newComment = {
-      id: new Date().getTime(),
-      text: commentText,
-      time: new Date().toLocaleString(),
-      replyId: null,
-    };
-    comments.push(newComment);
-    saveComment(comments);
-    renderComments(comments);
-  };
-
-  const createReplyForm = (parentId) => {
-    const replyForm = document.createElement("div");
-    replyForm.classList.add("reply-form");
-
-    replyForm.innerHTML = `<textarea placeholder="Your reply"></textarea>
-    <button class="send-reply">Reply</button>
-    <button class="cancel-reply">Cancel</button>`;
-
-    const replyTextArea = replyForm.querySelector("textarea");
-    const replyBtn = replyForm.querySelector(".send-reply");
-    const cancelBtn = replyForm.querySelector(".cancel-reply");
-
-    replyTextArea.addEventListener("blur", () => {
-      const replyText = replyTextArea.value.trim();
-      if (!replyText) {
-        replyForm.remove();
-      }
-    });
-    replyBtn.addEventListener("click", () => {
-      const replyText = replyTextArea.value.trim();
-      if (replyText) {
-        addReply(parentId, replyText);
-        replyForm.remove();
-      }
-    });
-
-    cancelBtn.addEventListener("click", () => {
-      replyForm.remove();
-    });
-    return replyForm;
-  };
-
-  const addReply = (parentId, replyText) => {
-    const comments = loadComments();
-
-    const newReply = {
-      id: new Date().getTime(),
-      text: replyText,
-      time: new Date().toLocaleString(),
-      replyId: parentId,
-    };
-
-    comments.push(newReply);
-    saveComment(comments);
-    renderComments(comments);
-  };
-
-  const deleteComment = (commentId) => {
-    const comments = loadComments();
-
-    const updatedComments = comments.filter(
-      (comment) => comment.id !== commentId && comment.replyId !== commentId
-    );
-
-    saveComment(updatedComments);
-    renderComments(updatedComments);
-  };
-
-  addCommentBtn.addEventListener("click", () => {
-    const commentText = newCommentText.value.trim();
-    if (commentText) {
-      addComment(commentText);
-      newCommentText.value = "";
     }
-  });
+    return false;
+  }
 
-  const comments = loadComments();
-  renderComments(comments);
+  useItemOrPotion(itemName) {
+    const itemIndex = this.inventory.findIndex(
+      (item) => item.name.toLowerCase() === itemName.toLowerCase()
+    );
+    if (itemIndex !== -1) {
+      const item = this.inventory[itemIndex];
+      item.use(this);
+      this.inventory.splice(itemIndex, 1);
+      return true;
+    }
+
+    const potionIndex = this.potions.findIndex(
+      (potion) => potion.name.toLowerCase() === itemName.toLowerCase()
+    );
+    if (potionIndex !== -1) {
+      const potion = this.potions[potionIndex];
+      potion.use(this);
+      this.potions.splice(potionIndex, 1);
+      return true;
+    }
+    return false;
+  }
+}
+
+class Item {
+  constructor(name, type, effect) {
+    this.name = name;
+    this.type = type;
+    this.effect = effect;
+  }
+
+  use(player) {
+    if (this.type === "potion") {
+      player.health += this.effect;
+      logBattle(
+        `${player.name} used ${this.name} and restoring his health by ${this.effect}hp.\n`
+      );
+    }
+    if (this.type === "weapon") {
+      player.strength += this.effect;
+      logBattle(
+        `${player.name} used ${this.name} and increasing his power by ${this.effect}srt.\n`
+      );
+    }
+    if (this.type === "armor") {
+      player.health += this.effect;
+      logBattle(
+        `${player.name} uses ${this.name}, increasing his health by ${this.effect}hp.\n`
+      );
+    }
+  }
+}
+
+class Monster {
+  constructor(type, health, strength, levelMultiplayer = 1) {
+    this.type = type;
+    this.baseHealth = health;
+    this.baseStrength = strength;
+    this.levelMultiplayer = levelMultiplayer;
+    this.health = this.baseHealth * this.levelMultiplayer;
+    this.strength = this.baseStrength * this.levelMultiplayer;
+  }
+
+  attack(player) {
+    const damage = Math.floor(Math.random() * this.strength) + 1;
+    player.health -= damage;
+    return damage;
+  }
+
+  updateLevel(level) {
+    this.levelMultiplayer = 1 + (level - 1) * 0.5;
+    this.health = Math.max(
+      Math.floor(this.baseHealth * this.levelMultiplayer),
+      0
+    );
+    this.strength = Math.max(
+      Math.floor(this.baseStrength * this.levelMultiplayer),
+      0
+    );
+  }
+}
+
+const player = new Player("Human");
+const medicalKit = new Item("Medical Kit", "potion", 25);
+player.addItemOrPotion(medicalKit);
+
+const monsters = [
+  new Monster("Snake", 25, 8),
+  new Monster("Wolf", 80, 20),
+  new Monster("Chicken", 10, 2),
+  new Monster("Duck", 15, 3),
+  new Monster("Fox", 40, 12),
+  new Monster("Hyena", 30, 15),
+  new Monster("Bear", 140, 40),
+  new Monster("Lion", 120, 60),
+  new Monster("Crocodile", 130, 70),
+];
+
+const items = [
+  new Item("Stick", "weapon", 5),
+  new Item("Bow", "weapon", 15),
+  new Item("Shield", "armor", 15),
+  new Item("Beer", "potion", 10),
+  new Item("Gun", "weapon", 20),
+  new Item("Bandage", "potion", 5),
+  new Item("Medical kit", "potion", 25),
+  new Item("Shoes", "armor", 5),
+  new Item("Kevlar", "armor", 30),
+];
+
+const playerNameEl = document.getElementById("player-name");
+const playerHealthEl = document.getElementById("player-health");
+const playerStrengthEl = document.getElementById("player-strength");
+const playerPotionsEl = document.getElementById("player-potions");
+const playerLevelEl = document.getElementById("player-level");
+const playerInventoryEl = document.getElementById("player-inventory");
+
+const monsterTypeEl = document.getElementById("monster-type");
+const monsterHealthEl = document.getElementById("monster-health");
+const monsterStrengthEl = document.getElementById("monster-strength");
+
+const battleLogEl = document.getElementById("battle-log");
+
+let currentMonster = null;
+
+const updateUI = () => {
+  playerNameEl.textContent = player.name;
+  playerHealthEl.textContent = player.health;
+  playerStrengthEl.textContent = player.strength;
+  playerPotionsEl.textContent = player.potions
+    .map((potion) => potion.name)
+    .join(", ");
+  playerLevelEl.textContent = player.level;
+  playerInventoryEl.textContent = player.inventory
+    .map((item) => item.name)
+    .join(", ");
+
+  if (currentMonster) {
+    monsterTypeEl.textContent = currentMonster.type;
+    monsterHealthEl.textContent = currentMonster.health;
+    monsterStrengthEl.textContent = currentMonster.strength;
+  }
+};
+
+const logBattle = (message) => {
+  battleLogEl.textContent += message;
+  battleLogEl.scrollTop = battleLogEl.scrollHeight;
+};
+
+const startGame = () => {
+  currentMonster = monsters[Math.floor(Math.random() * monsters.length)];
+  currentMonster.updateLevel(player.level);
+
+  const foundItem = items[Math.floor(Math.random() * items.length)];
+  if (player.addItemOrPotion(foundItem)) {
+    if (foundItem.type === "potion") {
+      logBattle(
+        `${player.name} found ${foundItem.name} and added to potions\n`
+      );
+    } else {
+      logBattle(
+        `${player.name} found ${foundItem.name} and added to inventory\n`
+      );
+    }
+  } else {
+    logBattle(
+      `${player.name} can't add this ${foundItem.name} because invetory or potions are full.\n`
+    );
+  }
+  updateUI();
+};
+
+const battle = (player, monster) => {
+  let battleLog = "";
+
+  while (player.health > 0 && monster.health > 0) {
+    const playerDamage = player.attack(monster);
+    battleLog += `${player.name} attacks ${monster.type} and deals ${playerDamage} damage.\n`;
+    if (monster.health <= 0) {
+      player.levelUp();
+      monster.health = 0;
+      battleLog += `${player.name} defeaded ${monster.type}.\n`;
+      return battleLog;
+    }
+
+    const monsterDamage = monster.attack(player);
+    battleLog += `${monster.type} attacks ${player.name} and deals ${monsterDamage} damage.\n`;
+    if (player.health <= 0) {
+      player.health = 0;
+      battleLog += `${player.name} is defeated.\n`;
+      return battleLog;
+    }
+  }
+};
+
+const attackBtn = document.getElementById("attack-button");
+const useItemHealBtn = document.getElementById("use-item-or-heal-button");
+const reloadBtn = document.getElementById("reload-button");
+
+attackBtn.addEventListener("click", () => {
+  const battleRes = battle(player, currentMonster);
+  logBattle(battleRes);
+  updateUI();
+  if (player.health <= 0) {
+    attackBtn.disabled = true;
+    useItemHealBtn.disabled = true;
+    alert("Game over!");
+  } else {
+    alert(`Your win! Your level is ${player.level} and go you to next level`);
+    startGame();
+  }
 });
+
+useItemHealBtn.addEventListener("click", () => {
+  const itemToUse = prompt("Enter name of item or potion you want to use");
+  if (itemToUse && player.useItemOrPotion(itemToUse)) {
+    logBattle(`${player.name} used ${itemToUse}.\n`);
+  } else {
+    logBattle("This item is not found in inventory\n");
+  }
+  updateUI();
+});
+
+reloadBtn.addEventListener("click", () => {
+  attackBtn.disabled = false;
+  useItemHealBtn.disabled = false;
+  location.reload();
+});
+
+startGame();
