@@ -1,269 +1,187 @@
-class Player {
-  constructor(name) {
-    this.name = name;
-    this.health = 100;
-    this.strength = 15;
-    this.potions = [];
-    this.maxPotions = 10;
-    this.level = 1;
-    this.inventory = [];
-    this.maxInventory = 5;
-  }
+const WeatherStation = {
+  temperature: null,
+  humidity: null,
+  pressure: null,
+  history: [],
 
-  attack(monster) {
-    const damage = Math.floor(Math.random() * this.strength) + 1;
-    monster.health -= damage;
-    return damage;
-  }
+  init() {
+    this.loadHistoryFromLocalStorage();
+    this.displayWeatherHistory();
+  },
 
-  levelUp() {
-    this.level++;
-    this.strength += 15;
-    this.health += 30;
-  }
+  updateWeatherData(data) {
+    this.temperature = data.temperature;
+    this.humidity = data.humidity;
+    this.pressure = data.pressure;
 
-  addItemOrPotion(item) {
-    if (item.type === "potion") {
-      if (this.potions.length < this.maxPotions) {
-        this.potions.push(item);
-        return true;
+    const date = new Date().toLocaleString();
+    const forecastData = this.generateForecast();
+    console.log("update", data, forecastData);
+    this.history.push({ date, forecast: forecastData.forecast, ...data });
+
+    this.saveHistoryToLocalStorage();
+    this.displayWeatherForecast();
+    this.displayWeatherHistory();
+  },
+
+  generateForecast() {
+    let forecast = "";
+    let icon = "";
+    if (this.temperature > 20 && this.humidity < 50 && this.pressure > 1013) {
+      forecast = "Clear Sky";
+      icon = "https://cdn.weatherbit.io/static/img/icons/c01d.png";
+    } else if (this.humidity > 70 && this.pressure < 1013) {
+      if (this.temperature < 0) {
+        forecast = "Snowfall";
+        icon = "https://cdn.weatherbit.io/static/img/icons/s02d.png";
+      } else if (this.temperature > 0) {
+        forecast = "Rain";
+        icon = "https://cdn.weatherbit.io/static/img/icons/d02d.png";
       }
+    } else if (this.humidity > 90 && this.temperature < 0) {
+      forecast = "Fog";
+      icon = "https://cdn.weatherbit.io/static/img/icons/f01d.png";
+    } else if (this.humidity > 90 && this.temperature > 0) {
+      forecast = "Rain";
+      icon = "https://cdn.weatherbit.io/static/img/icons/d02d.png";
+    } else if (
+      this.temperature > 15 &&
+      this.humidity > 70 &&
+      this.pressure < 1013
+    ) {
+      forecast = "Thunderstorm";
+      icon = "https://cdn.weatherbit.io/static/img/icons/t04d.png";
+    } else if (this.humidity <= 30 && this.pressure >= 1020) {
+      forecast = "Mainly clear";
+      icon = "https://cdn.weatherbit.io/static/img/icons/c02d.png";
     } else {
-      if (this.inventory.length < this.maxInventory) {
-        this.inventory.push(item);
-        return true;
+      forecast = "Partly cloudy, or overcast";
+      icon = "https://cdn.weatherbit.io/static/img/icons/c03d.png";
+    }
+    return { forecast, icon };
+  },
+
+  displayWeatherForecast() {
+    const forecastContainer = document.getElementById("forecast");
+    forecastContainer.innerHTML = "";
+
+    const { forecast, icon } = this.generateForecast();
+
+    const card = document.createElement("div");
+    card.classList.add("weather-card");
+
+    card.innerHTML = `
+    <div class ="wather-forecast">
+      <span><img src =${icon} alt = "Weather icon"/></span>
+      <h2>${forecast}</h2>
+    </div>
+    <div class="weather-details">
+      <p>Temperature:${this.temperature}°C</p>
+      <p>Humidity:${this.humidity}%</p>
+      <p>Pressure: ${this.pressure}hPa</p>
+    </div>`;
+
+    forecastContainer.appendChild(card);
+  },
+
+  displayWeatherHistory() {
+    const historyList = document.getElementById("historyList");
+
+    historyList.innerHTML = "";
+    this.history.forEach((el) => {
+      const listItem = document.createElement("li");
+      listItem.innerHTML = `
+      <p>Date: ${el.date}</p>
+      <p>Forecast: ${el.forecast}</p>
+      <p>Temperature: ${el.temperature}°C</p>
+      <p>Humidity: ${el.humidity}%</p>
+      <p>Pressure: ${el.pressure}hPa</p>
+      `;
+      historyList.appendChild(listItem);
+    });
+  },
+
+  saveHistoryToLocalStorage() {
+    localStorage.setItem("weatherHistory", JSON.stringify(this.history));
+  },
+
+  loadHistoryFromLocalStorage() {
+    const historyData = localStorage.getItem("weatherHistory");
+    if (historyData) {
+      this.history = JSON.parse(historyData);
+    }
+  },
+
+  async fetchWeatherFromApi(city) {
+    const geoUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&limit=1`;
+    try {
+      const geoResponse = await fetch(geoUrl);
+      const geoData = await geoResponse.json();
+
+      if (geoData.length === 0) {
+        this.showError(
+          "Місто не знайдено або введене не вірно.",
+          "cityError"
+        );
+        return;
       }
+
+      const { lat, lon } = geoData[0];
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,pressure_msl&forecast_days=1`;
+
+      const weatherResponse = await fetch(weatherUrl);
+      const weatherData = await weatherResponse.json();
+      console.log(weatherData);
+      if (weatherData.current) {
+        const temperature = weatherData.current.temperature_2m;
+        const humidity = weatherData.current.relative_humidity_2m;
+        const pressure = weatherData.current.pressure_msl;
+        const data = { temperature, humidity, pressure };
+        this.updateWeatherData(data);
+      } else {
+        this.showError("Не вдалося отримати дані про погоду.", "cityError");
+      }
+    } catch (e) {
+      console.log(e.message);
+      this.showError("Помилка при отриманні даних.", "cityError");
     }
-    return false;
-  }
+  },
+  showError(message, elementId) {
+    const errorMessageElement = document.getElementById(elementId);
+    errorMessageElement.textContent = message;
+    errorMessageElement.style.display = "block";
 
-  useItemOrPotion(itemName) {
-    const itemIndex = this.inventory.findIndex(
-      (item) => item.name.toLowerCase() === itemName.toLowerCase()
-    );
-    if (itemIndex !== -1) {
-      const item = this.inventory[itemIndex];
-      item.use(this);
-      this.inventory.splice(itemIndex, 1);
-      return true;
-    }
-
-    const potionIndex = this.potions.findIndex(
-      (potion) => potion.name.toLowerCase() === itemName.toLowerCase()
-    );
-    if (potionIndex !== -1) {
-      const potion = this.potions[potionIndex];
-      potion.use(this);
-      this.potions.splice(potionIndex, 1);
-      return true;
-    }
-    return false;
-  }
-}
-
-class Item {
-  constructor(name, type, effect) {
-    this.name = name;
-    this.type = type;
-    this.effect = effect;
-  }
-
-  use(player) {
-    if (this.type === "potion") {
-      player.health += this.effect;
-      logBattle(
-        `${player.name} used ${this.name} and restoring his health by ${this.effect}hp.\n`
-      );
-    }
-    if (this.type === "weapon") {
-      player.strength += this.effect;
-      logBattle(
-        `${player.name} used ${this.name} and increasing his power by ${this.effect}srt.\n`
-      );
-    }
-    if (this.type === "armor") {
-      player.health += this.effect;
-      logBattle(
-        `${player.name} uses ${this.name}, increasing his health by ${this.effect}hp.\n`
-      );
-    }
-  }
-}
-
-class Monster {
-  constructor(type, health, strength, levelMultiplayer = 1) {
-    this.type = type;
-    this.baseHealth = health;
-    this.baseStrength = strength;
-    this.levelMultiplayer = levelMultiplayer;
-    this.health = this.baseHealth * this.levelMultiplayer;
-    this.strength = this.baseStrength * this.levelMultiplayer;
-  }
-
-  attack(player) {
-    const damage = Math.floor(Math.random() * this.strength) + 1;
-    player.health -= damage;
-    return damage;
-  }
-
-  updateLevel(level) {
-    this.levelMultiplayer = 1 + (level - 1) * 0.5;
-    this.health = Math.max(
-      Math.floor(this.baseHealth * this.levelMultiplayer),
-      0
-    );
-    this.strength = Math.max(
-      Math.floor(this.baseStrength * this.levelMultiplayer),
-      0
-    );
-  }
-}
-
-const player = new Player("Human");
-const medicalKit = new Item("Medical Kit", "potion", 25);
-player.addItemOrPotion(medicalKit);
-
-const monsters = [
-  new Monster("Snake", 25, 8),
-  new Monster("Wolf", 80, 20),
-  new Monster("Chicken", 10, 2),
-  new Monster("Duck", 15, 3),
-  new Monster("Fox", 40, 12),
-  new Monster("Hyena", 30, 15),
-  new Monster("Bear", 140, 40),
-  new Monster("Lion", 120, 60),
-  new Monster("Crocodile", 130, 70),
-];
-
-const items = [
-  new Item("Stick", "weapon", 5),
-  new Item("Bow", "weapon", 15),
-  new Item("Shield", "armor", 15),
-  new Item("Beer", "potion", 10),
-  new Item("Gun", "weapon", 20),
-  new Item("Bandage", "potion", 5),
-  new Item("Medical kit", "potion", 25),
-  new Item("Shoes", "armor", 5),
-  new Item("Kevlar", "armor", 30),
-];
-
-const playerNameEl = document.getElementById("player-name");
-const playerHealthEl = document.getElementById("player-health");
-const playerStrengthEl = document.getElementById("player-strength");
-const playerPotionsEl = document.getElementById("player-potions");
-const playerLevelEl = document.getElementById("player-level");
-const playerInventoryEl = document.getElementById("player-inventory");
-
-const monsterTypeEl = document.getElementById("monster-type");
-const monsterHealthEl = document.getElementById("monster-health");
-const monsterStrengthEl = document.getElementById("monster-strength");
-
-const battleLogEl = document.getElementById("battle-log");
-
-let currentMonster = null;
-
-const updateUI = () => {
-  playerNameEl.textContent = player.name;
-  playerHealthEl.textContent = player.health;
-  playerStrengthEl.textContent = player.strength;
-  playerPotionsEl.textContent = player.potions
-    .map((potion) => potion.name)
-    .join(", ");
-  playerLevelEl.textContent = player.level;
-  playerInventoryEl.textContent = player.inventory
-    .map((item) => item.name)
-    .join(", ");
-
-  if (currentMonster) {
-    monsterTypeEl.textContent = currentMonster.type;
-    monsterHealthEl.textContent = currentMonster.health;
-    monsterStrengthEl.textContent = currentMonster.strength;
-  }
+    setTimeout(() => {
+      errorMessageElement.style.display = "none";
+    }, 5000);
+  },
 };
 
-const logBattle = (message) => {
-  battleLogEl.textContent += message;
-  battleLogEl.scrollTop = battleLogEl.scrollHeight;
-};
-
-const startGame = () => {
-  currentMonster = monsters[Math.floor(Math.random() * monsters.length)];
-  currentMonster.updateLevel(player.level);
-
-  const foundItem = items[Math.floor(Math.random() * items.length)];
-  if (player.addItemOrPotion(foundItem)) {
-    if (foundItem.type === "potion") {
-      logBattle(
-        `${player.name} found ${foundItem.name} and added to potions\n`
-      );
-    } else {
-      logBattle(
-        `${player.name} found ${foundItem.name} and added to inventory\n`
-      );
-    }
+document.getElementById("updateWeatherButton").addEventListener("click", () => {
+  const temperature = document.getElementById("temperature").value;
+  const humidity = document.getElementById("humidity").value;
+  const pressure = document.getElementById("pressure").value;
+  if (!isNaN(temperature) && !isNaN(humidity) && !isNaN(pressure)) {
+    const data = {
+      temperature,
+      humidity,
+      pressure,
+    };
+    WeatherStation.updateWeatherData(data);
   } else {
-    logBattle(
-      `${player.name} can't add this ${foundItem.name} because invetory or potions are full.\n`
+    WeatherStation.showError(
+      "Будь ласка, введіть коректні значення.",
+      "updateWeatherError"
     );
-  }
-  updateUI();
-};
-
-const battle = (player, monster) => {
-  let battleLog = "";
-
-  while (player.health > 0 && monster.health > 0) {
-    const playerDamage = player.attack(monster);
-    battleLog += `${player.name} attacks ${monster.type} and deals ${playerDamage} damage.\n`;
-    if (monster.health <= 0) {
-      player.levelUp();
-      monster.health = 0;
-      battleLog += `${player.name} defeaded ${monster.type}.\n`;
-      return battleLog;
-    }
-
-    const monsterDamage = monster.attack(player);
-    battleLog += `${monster.type} attacks ${player.name} and deals ${monsterDamage} damage.\n`;
-    if (player.health <= 0) {
-      player.health = 0;
-      battleLog += `${player.name} is defeated.\n`;
-      return battleLog;
-    }
-  }
-};
-
-const attackBtn = document.getElementById("attack-button");
-const useItemHealBtn = document.getElementById("use-item-or-heal-button");
-const reloadBtn = document.getElementById("reload-button");
-
-attackBtn.addEventListener("click", () => {
-  const battleRes = battle(player, currentMonster);
-  logBattle(battleRes);
-  updateUI();
-  if (player.health <= 0) {
-    attackBtn.disabled = true;
-    useItemHealBtn.disabled = true;
-    alert("Game over!");
-  } else {
-    alert(`Your win! Your level is ${player.level} and go you to next level`);
-    startGame();
   }
 });
 
-useItemHealBtn.addEventListener("click", () => {
-  const itemToUse = prompt("Enter name of item or potion you want to use");
-  if (itemToUse && player.useItemOrPotion(itemToUse)) {
-    logBattle(`${player.name} used ${itemToUse}.\n`);
+document.getElementById("fetchWeatherButton").addEventListener("click", () => {
+  const city = document.getElementById("city").value.trim();
+  if (city) {
+    WeatherStation.fetchWeatherFromApi(city);
   } else {
-    logBattle("This item is not found in inventory\n");
+    WeatherStation.showError("Будь ласка, введіть назву міста.", "cityError");
   }
-  updateUI();
 });
-
-reloadBtn.addEventListener("click", () => {
-  attackBtn.disabled = false;
-  useItemHealBtn.disabled = false;
-  location.reload();
-});
-
-startGame();
+WeatherStation.init();
