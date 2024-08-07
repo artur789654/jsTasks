@@ -1,66 +1,222 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
+class Task {
+  constructor(description, status = "new", priority = "medium") {
+    this.id = Task.generateId();
+    this.description = description;
+    this.status = status;
+    this.priority = priority;
+  }
 
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
+  updateStatus(newStatus) {
+    this.status = newStatus;
+  }
 
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
+  updatePriority(newPriority) {
+    this.priority = newPriority;
+  }
 
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
-
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
-
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
-  });
-}
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
+  static generateId() {
+    return Date.now().toString() + Math.random().toString(36).substring(2);
   }
 }
-execute();
+
+class TaskManager {
+  constructor() {
+    this.originalTasks = this.loadTasks();
+    this.tasks = [...this.originalTasks];
+    this.sortOrder = "none";
+  }
+
+  saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(this.originalTasks));
+  }
+
+  loadTasks() {
+    const tasks = localStorage.getItem("tasks");
+    return tasks
+      ? JSON.parse(tasks).map(
+          (task) => new Task(task.description, task.status, task.priority)
+        )
+      : [];
+  }
+
+  addTask(description, status, priority) {
+    const task = new Task(description, status, priority);
+    this.originalTasks.push(task);
+    this.applySorting();
+    this.saveTasks();
+    return task;
+  }
+
+  removeTask(taskId) {
+    const originalIndex = this.originalTasks.findIndex(
+      (task) => task.id === taskId
+    );
+
+    if (originalIndex !== -1) {
+      this.originalTasks.splice(originalIndex, 1);
+      this.applySorting();
+      this.saveTasks();
+    }
+  }
+
+  priorityValue(priority) {
+    const priorities = {
+      high: 1,
+      medium: 2,
+      low: 3,
+    };
+    return priorities[priority] || 2;
+  }
+
+  sortTasksByPriority() {
+    if (this.sortOrder === "asc") {
+      return [...this.originalTasks].sort(
+        (a, b) =>
+          this.priorityValue(a.priority) - this.priorityValue(b.priority)
+      );
+    } else if (this.sortOrder === "desc") {
+      return [...this.originalTasks].sort(
+        (a, b) =>
+          this.priorityValue(b.priority) - this.priorityValue(a.priority)
+      );
+    }
+    return [...this.originalTasks];
+  }
+
+  applySorting() {
+    this.tasks = this.sortTasksByPriority();
+  }
+
+  setSortOrder(order) {
+    this.sortOrder = order;
+    this.applySorting();
+  }
+
+  filterTasks(selectedStatus, selectedPriority) {
+    return this.tasks.filter((task) => {
+      const matchesStatus =
+        selectedStatus === "all" || task.status === selectedStatus;
+      const matchesPriority =
+        selectedPriority === "all" || task.priority === selectedPriority;
+
+      return matchesStatus && matchesPriority;
+    });
+  }
+}
+
+const taskManager = new TaskManager();
+const taskList = document.getElementById("taskList");
+const sortOrderSelect = document.getElementById("sortOrderSelect");
+
+const filterStatus = document.getElementById("filterStatus");
+const filterPriority = document.getElementById("filterPriority");
+
+const renderTasks = () => {
+  const selectedStatus = filterStatus.value;
+  const selectedPriority = filterPriority.value;
+  const sortOrder = sortOrderSelect.value;
+
+  taskManager.setSortOrder(sortOrder);
+
+  const filteredTasks = taskManager.filterTasks(
+    selectedStatus,
+    selectedPriority
+  );
+  taskList.innerHTML = "";
+  filteredTasks.forEach((task) => {
+    const taskItem = document.createElement("li");
+    taskItem.classList.add("task-item", task.status);
+    taskItem.innerHTML = `
+      <span class="task-description">${task.description}</span>
+      <select class="task-status" data-id="${task.id}">
+        <option value="new" ${
+          task.status === "new" ? "selected" : ""
+        }>New</option>
+        <option value="in-progress" ${
+          task.status === "in-progress" ? "selected" : ""
+        }>In Progress</option>
+        <option value="completed" ${
+          task.status === "completed" ? "selected" : ""
+        }>Completed</option>
+      </select>
+      <select class="task-priority" data-id="${task.id}">
+        <option value="high" ${
+          task.priority === "high" ? "selected" : ""
+        }>High</option>
+        <option value="medium" ${
+          task.priority === "medium" ? "selected" : ""
+        }>Medium</option>
+        <option value="low" ${
+          task.priority === "low" ? "selected" : ""
+        }>Low</option>
+      </select>
+      <button class="delete-btn" data-id="${task.id}">Delete</button>
+    `;
+    taskList.appendChild(taskItem);
+  });
+
+  document.querySelectorAll(".task-status").forEach((select) => {
+    select.addEventListener("change", (e) => {
+      const taskId = e.target.getAttribute("data-id");
+      const newStatus = e.target.value;
+
+      const task = taskManager.originalTasks.find((task) => task.id === taskId);
+      if (task) {
+        task.updateStatus(newStatus);
+        taskManager.saveTasks();
+        renderTasks();
+      }
+    });
+  });
+
+  document.querySelectorAll(".task-priority").forEach((select) => {
+    select.addEventListener("change", (e) => {
+      const taskId = e.target.getAttribute("data-id");
+      const newPriority = e.target.value;
+      const task = taskManager.originalTasks.find((task) => task.id === taskId);
+      if (task) {
+        task.updatePriority(newPriority);
+        taskManager.saveTasks();
+        renderTasks();
+      }
+    });
+  });
+};
+
+const addTaskBtn = document.getElementById("addTaskBtn");
+
+addTaskBtn.addEventListener("click", () => {
+  const descriptionInput = document.getElementById("taskDescription");
+  const description = descriptionInput.value.trim();
+  const status = document.getElementById("taskStatus").value;
+  const priority = document.getElementById("taskPriority").value;
+
+  if (description !== "") {
+    taskManager.addTask(description, status, priority);
+    renderTasks();
+    descriptionInput.value = "";
+  }
+});
+
+taskList.addEventListener("click", (e) => {
+  if (e.target.classList.contains("delete-btn")) {
+    const taskId = e.target.getAttribute("data-id");
+    taskManager.removeTask(taskId);
+    renderTasks();
+  }
+});
+
+filterStatus.addEventListener("change", renderTasks);
+filterPriority.addEventListener("change", renderTasks);
+sortOrderSelect.addEventListener("change", renderTasks);
+
+const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+
+resetFiltersBtn.addEventListener("click", () => {
+  filterStatus.value = "all";
+  filterPriority.value = "all";
+  sortOrderSelect.value = "none";
+  renderTasks();
+});
+
+renderTasks();

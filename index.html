@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="task-form">
+        <input
+          type="text"
+          id="taskDescription"
+          placeholder="Task description" />
+        <select id="taskStatus">
+          <option value="new">New</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select id="taskPriority">
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <button id="addTaskBtn">Add task</button>
+      </div>
+      <div class="filters">
+        <select id="filterStatus">
+          <option value="all">All Statuses</option>
+          <option value="new">New</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select id="filterPriority">
+          <option value="all">All Priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select id="sortOrderSelect">
+          <option value="none">Not sorted</option>
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+        <button id="resetFiltersBtn">Reset Filters</button>
+      </div>
+      <ul id="taskList"></ul>
+    </div>
+  </body>
+</html>
