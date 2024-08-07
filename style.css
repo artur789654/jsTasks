@@ -1,130 +1,142 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+*{
+  box-sizing: border-box;
   margin: 0;
-  padding: 0;
+  padding: 0; 
 }
 
-.container {
-  max-width: 800px;
-  margin: 50px auto;
-  padding: 20px;
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;  
+}
+.container{
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 600px;
+  max-width: 100%;
 }
 
-h1,
-h2 {
-  text-align: center;
-  color: #333;
-}
-
-.weather-forms-container {
+.task-form{
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
-
-.weather-form,
-.manual-weather-form {
-  flex: 1;
-  padding: 10px;
-  margin-right: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+.task-form input,
+.task-form select,
+.task-form button {
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 14px;
 }
 
-.weather-form:last-child {
-  margin-right: 0;
+.task-form button {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-}
-input[type="text"],
-input[type="number"] {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-sizing: border-box;
+.task-form button:hover {
+    background-color: #218838;
 }
 
-button {
-  padding: 10px 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
-button:hover {
-  background-color: #45a049;
+.filters select {
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 14px;
 }
 
-.forecast-display,
-.history-display {
-  margin-top: 20px;
+#taskList {
+    list-style-type: none;
+    padding: 0;
 }
 
-.weather-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px;
-  border-radius: 8px;
-  background-color: #e3f2fd;
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    background-color: #fafafa;
+}
+
+.task-item.new {
+  border-left: 5px solid #007bff; 
+}
+
+.task-item.in-progress {
+  border-left: 5px solid #ffc107;
+}
+
+.task-item.completed {
+  border-left: 5px solid #28a745;
+  background-color: #e0ffe0;
+}
+
+.task-item:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 10px;
+}
+.task-item .task-description {
+    flex: 1;
+    font-size: 16px;
+    color: #333;
+    margin-right: 10px;
 }
 
-.weather-forecast img {
-  width: 50px;
-  height: 50px;
+.task-item select {
+    padding: 5px;
+    margin-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 14px;
 }
 
-.weather-details {
-  text-align: right;
+.delete-btn {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-.history-display ul {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  list-style: none;
-  padding: 0;
+.delete-btn:hover {
+    background-color: #c82333;
 }
 
-.history-display li {
-  width: 200px;
-  background-color: #f1f1f1;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 5px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.error-message {
-  display: none;
-  margin-bottom: 15px;
-  background-color: #f8d7da;
-  color: #721c24;
-  padding: 5px;
-  border: 1px solid #f5c6cb;
+#resetFiltersBtn {
+  background-color: #ffc107;
+  color: #fff;
+  border: none;
   border-radius: 5px;
-  margin-top: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s, box-shadow 0.3s;
   font-size: 14px;
+}
+
+#resetFiltersBtn:hover {
+  background-color: #e0a800;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

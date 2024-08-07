@@ -1,187 +1,222 @@
-const WeatherStation = {
-  temperature: null,
-  humidity: null,
-  pressure: null,
-  history: [],
+class Task {
+  constructor(description, status = "new", priority = "medium") {
+    this.id = Task.generateId();
+    this.description = description;
+    this.status = status;
+    this.priority = priority;
+  }
 
-  init() {
-    this.loadHistoryFromLocalStorage();
-    this.displayWeatherHistory();
-  },
+  updateStatus(newStatus) {
+    this.status = newStatus;
+  }
 
-  updateWeatherData(data) {
-    this.temperature = data.temperature;
-    this.humidity = data.humidity;
-    this.pressure = data.pressure;
+  updatePriority(newPriority) {
+    this.priority = newPriority;
+  }
 
-    const date = new Date().toLocaleString();
-    const forecastData = this.generateForecast();
-    console.log("update", data, forecastData);
-    this.history.push({ date, forecast: forecastData.forecast, ...data });
+  static generateId() {
+    return Date.now().toString() + Math.random().toString(36).substring(2);
+  }
+}
 
-    this.saveHistoryToLocalStorage();
-    this.displayWeatherForecast();
-    this.displayWeatherHistory();
-  },
+class TaskManager {
+  constructor() {
+    this.originalTasks = this.loadTasks();
+    this.tasks = [...this.originalTasks];
+    this.sortOrder = "none";
+  }
 
-  generateForecast() {
-    let forecast = "";
-    let icon = "";
-    if (this.temperature > 20 && this.humidity < 50 && this.pressure > 1013) {
-      forecast = "Clear Sky";
-      icon = "https://cdn.weatherbit.io/static/img/icons/c01d.png";
-    } else if (this.humidity > 70 && this.pressure < 1013) {
-      if (this.temperature < 0) {
-        forecast = "Snowfall";
-        icon = "https://cdn.weatherbit.io/static/img/icons/s02d.png";
-      } else if (this.temperature > 0) {
-        forecast = "Rain";
-        icon = "https://cdn.weatherbit.io/static/img/icons/d02d.png";
-      }
-    } else if (this.humidity > 90 && this.temperature < 0) {
-      forecast = "Fog";
-      icon = "https://cdn.weatherbit.io/static/img/icons/f01d.png";
-    } else if (this.humidity > 90 && this.temperature > 0) {
-      forecast = "Rain";
-      icon = "https://cdn.weatherbit.io/static/img/icons/d02d.png";
-    } else if (
-      this.temperature > 15 &&
-      this.humidity > 70 &&
-      this.pressure < 1013
-    ) {
-      forecast = "Thunderstorm";
-      icon = "https://cdn.weatherbit.io/static/img/icons/t04d.png";
-    } else if (this.humidity <= 30 && this.pressure >= 1020) {
-      forecast = "Mainly clear";
-      icon = "https://cdn.weatherbit.io/static/img/icons/c02d.png";
-    } else {
-      forecast = "Partly cloudy, or overcast";
-      icon = "https://cdn.weatherbit.io/static/img/icons/c03d.png";
+  saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(this.originalTasks));
+  }
+
+  loadTasks() {
+    const tasks = localStorage.getItem("tasks");
+    return tasks
+      ? JSON.parse(tasks).map(
+          (task) => new Task(task.description, task.status, task.priority)
+        )
+      : [];
+  }
+
+  addTask(description, status, priority) {
+    const task = new Task(description, status, priority);
+    this.originalTasks.push(task);
+    this.applySorting();
+    this.saveTasks();
+    return task;
+  }
+
+  removeTask(taskId) {
+    const originalIndex = this.originalTasks.findIndex(
+      (task) => task.id === taskId
+    );
+
+    if (originalIndex !== -1) {
+      this.originalTasks.splice(originalIndex, 1);
+      this.applySorting();
+      this.saveTasks();
     }
-    return { forecast, icon };
-  },
+  }
 
-  displayWeatherForecast() {
-    const forecastContainer = document.getElementById("forecast");
-    forecastContainer.innerHTML = "";
+  priorityValue(priority) {
+    const priorities = {
+      high: 1,
+      medium: 2,
+      low: 3,
+    };
+    return priorities[priority] || 2;
+  }
 
-    const { forecast, icon } = this.generateForecast();
+  sortTasksByPriority() {
+    if (this.sortOrder === "asc") {
+      return [...this.originalTasks].sort(
+        (a, b) =>
+          this.priorityValue(a.priority) - this.priorityValue(b.priority)
+      );
+    } else if (this.sortOrder === "desc") {
+      return [...this.originalTasks].sort(
+        (a, b) =>
+          this.priorityValue(b.priority) - this.priorityValue(a.priority)
+      );
+    }
+    return [...this.originalTasks];
+  }
 
-    const card = document.createElement("div");
-    card.classList.add("weather-card");
+  applySorting() {
+    this.tasks = this.sortTasksByPriority();
+  }
 
-    card.innerHTML = `
-    <div class ="wather-forecast">
-      <span><img src =${icon} alt = "Weather icon"/></span>
-      <h2>${forecast}</h2>
-    </div>
-    <div class="weather-details">
-      <p>Temperature:${this.temperature}°C</p>
-      <p>Humidity:${this.humidity}%</p>
-      <p>Pressure: ${this.pressure}hPa</p>
-    </div>`;
+  setSortOrder(order) {
+    this.sortOrder = order;
+    this.applySorting();
+  }
 
-    forecastContainer.appendChild(card);
-  },
+  filterTasks(selectedStatus, selectedPriority) {
+    return this.tasks.filter((task) => {
+      const matchesStatus =
+        selectedStatus === "all" || task.status === selectedStatus;
+      const matchesPriority =
+        selectedPriority === "all" || task.priority === selectedPriority;
 
-  displayWeatherHistory() {
-    const historyList = document.getElementById("historyList");
-
-    historyList.innerHTML = "";
-    this.history.forEach((el) => {
-      const listItem = document.createElement("li");
-      listItem.innerHTML = `
-      <p>Date: ${el.date}</p>
-      <p>Forecast: ${el.forecast}</p>
-      <p>Temperature: ${el.temperature}°C</p>
-      <p>Humidity: ${el.humidity}%</p>
-      <p>Pressure: ${el.pressure}hPa</p>
-      `;
-      historyList.appendChild(listItem);
+      return matchesStatus && matchesPriority;
     });
-  },
+  }
+}
 
-  saveHistoryToLocalStorage() {
-    localStorage.setItem("weatherHistory", JSON.stringify(this.history));
-  },
+const taskManager = new TaskManager();
+const taskList = document.getElementById("taskList");
+const sortOrderSelect = document.getElementById("sortOrderSelect");
 
-  loadHistoryFromLocalStorage() {
-    const historyData = localStorage.getItem("weatherHistory");
-    if (historyData) {
-      this.history = JSON.parse(historyData);
-    }
-  },
+const filterStatus = document.getElementById("filterStatus");
+const filterPriority = document.getElementById("filterPriority");
 
-  async fetchWeatherFromApi(city) {
-    const geoUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&limit=1`;
-    try {
-      const geoResponse = await fetch(geoUrl);
-      const geoData = await geoResponse.json();
+const renderTasks = () => {
+  const selectedStatus = filterStatus.value;
+  const selectedPriority = filterPriority.value;
+  const sortOrder = sortOrderSelect.value;
 
-      if (geoData.length === 0) {
-        this.showError(
-          "Місто не знайдено або введене не вірно.",
-          "cityError"
-        );
-        return;
+  taskManager.setSortOrder(sortOrder);
+
+  const filteredTasks = taskManager.filterTasks(
+    selectedStatus,
+    selectedPriority
+  );
+  taskList.innerHTML = "";
+  filteredTasks.forEach((task) => {
+    const taskItem = document.createElement("li");
+    taskItem.classList.add("task-item", task.status);
+    taskItem.innerHTML = `
+      <span class="task-description">${task.description}</span>
+      <select class="task-status" data-id="${task.id}">
+        <option value="new" ${
+          task.status === "new" ? "selected" : ""
+        }>New</option>
+        <option value="in-progress" ${
+          task.status === "in-progress" ? "selected" : ""
+        }>In Progress</option>
+        <option value="completed" ${
+          task.status === "completed" ? "selected" : ""
+        }>Completed</option>
+      </select>
+      <select class="task-priority" data-id="${task.id}">
+        <option value="high" ${
+          task.priority === "high" ? "selected" : ""
+        }>High</option>
+        <option value="medium" ${
+          task.priority === "medium" ? "selected" : ""
+        }>Medium</option>
+        <option value="low" ${
+          task.priority === "low" ? "selected" : ""
+        }>Low</option>
+      </select>
+      <button class="delete-btn" data-id="${task.id}">Delete</button>
+    `;
+    taskList.appendChild(taskItem);
+  });
+
+  document.querySelectorAll(".task-status").forEach((select) => {
+    select.addEventListener("change", (e) => {
+      const taskId = e.target.getAttribute("data-id");
+      const newStatus = e.target.value;
+
+      const task = taskManager.originalTasks.find((task) => task.id === taskId);
+      if (task) {
+        task.updateStatus(newStatus);
+        taskManager.saveTasks();
+        renderTasks();
       }
+    });
+  });
 
-      const { lat, lon } = geoData[0];
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,pressure_msl&forecast_days=1`;
-
-      const weatherResponse = await fetch(weatherUrl);
-      const weatherData = await weatherResponse.json();
-      console.log(weatherData);
-      if (weatherData.current) {
-        const temperature = weatherData.current.temperature_2m;
-        const humidity = weatherData.current.relative_humidity_2m;
-        const pressure = weatherData.current.pressure_msl;
-        const data = { temperature, humidity, pressure };
-        this.updateWeatherData(data);
-      } else {
-        this.showError("Не вдалося отримати дані про погоду.", "cityError");
+  document.querySelectorAll(".task-priority").forEach((select) => {
+    select.addEventListener("change", (e) => {
+      const taskId = e.target.getAttribute("data-id");
+      const newPriority = e.target.value;
+      const task = taskManager.originalTasks.find((task) => task.id === taskId);
+      if (task) {
+        task.updatePriority(newPriority);
+        taskManager.saveTasks();
+        renderTasks();
       }
-    } catch (e) {
-      console.log(e.message);
-      this.showError("Помилка при отриманні даних.", "cityError");
-    }
-  },
-  showError(message, elementId) {
-    const errorMessageElement = document.getElementById(elementId);
-    errorMessageElement.textContent = message;
-    errorMessageElement.style.display = "block";
-
-    setTimeout(() => {
-      errorMessageElement.style.display = "none";
-    }, 5000);
-  },
+    });
+  });
 };
 
-document.getElementById("updateWeatherButton").addEventListener("click", () => {
-  const temperature = document.getElementById("temperature").value;
-  const humidity = document.getElementById("humidity").value;
-  const pressure = document.getElementById("pressure").value;
-  if (!isNaN(temperature) && !isNaN(humidity) && !isNaN(pressure)) {
-    const data = {
-      temperature,
-      humidity,
-      pressure,
-    };
-    WeatherStation.updateWeatherData(data);
-  } else {
-    WeatherStation.showError(
-      "Будь ласка, введіть коректні значення.",
-      "updateWeatherError"
-    );
+const addTaskBtn = document.getElementById("addTaskBtn");
+
+addTaskBtn.addEventListener("click", () => {
+  const descriptionInput = document.getElementById("taskDescription");
+  const description = descriptionInput.value.trim();
+  const status = document.getElementById("taskStatus").value;
+  const priority = document.getElementById("taskPriority").value;
+
+  if (description !== "") {
+    taskManager.addTask(description, status, priority);
+    renderTasks();
+    descriptionInput.value = "";
   }
 });
 
-document.getElementById("fetchWeatherButton").addEventListener("click", () => {
-  const city = document.getElementById("city").value.trim();
-  if (city) {
-    WeatherStation.fetchWeatherFromApi(city);
-  } else {
-    WeatherStation.showError("Будь ласка, введіть назву міста.", "cityError");
+taskList.addEventListener("click", (e) => {
+  if (e.target.classList.contains("delete-btn")) {
+    const taskId = e.target.getAttribute("data-id");
+    taskManager.removeTask(taskId);
+    renderTasks();
   }
 });
-WeatherStation.init();
+
+filterStatus.addEventListener("change", renderTasks);
+filterPriority.addEventListener("change", renderTasks);
+sortOrderSelect.addEventListener("change", renderTasks);
+
+const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+
+resetFiltersBtn.addEventListener("click", () => {
+  filterStatus.value = "all";
+  filterPriority.value = "all";
+  sortOrderSelect.value = "none";
+  renderTasks();
+});
+
+renderTasks();
