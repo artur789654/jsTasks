@@ -1,66 +1,119 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
+const secretKey = "qwerty-asdfgh-zxcvb";
 
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
-
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
-
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
-
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
-
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
-  });
+if (typeof Storage === "undefined") {
+  alert("Your browser doesn't support storage data storage will be unavailable");
 }
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
+
+const encryptData = (data, secretKey) => {
+  return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+};
+
+const decryptData = (data, secretKey) => {
+  const bytes = CryptoJS.AES.decrypt(data, secretKey);
+  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+};
+
+const init = () => {
+  const savedState = localStorage.getItem("appState");
+  if (!savedState) {
+    const initState = {
+      theme: "light",
+      lang: "en",
+      lastUpdate: new Date().getTime(),
+    };
+    const encryptState = encryptData(initState, secretKey);
+    localStorage.setItem("appState",encryptState);
   }
-}
-execute();
+  applyState(loadState());
+};
+
+const loadState = () => {
+  const encryptState = localStorage.getItem("appState");
+  if (encryptState) {
+    try {
+      return decryptData(encryptState, secretKey);
+    } catch (e) {
+      console.log('niot', e);
+      return null;
+    }
+  }
+  return null;
+};
+
+const updateState = (newState) => {
+  newState.lastUpdate = new Date().getTime();
+  const encryptState = encryptData(newState, secretKey);
+  localStorage.setItem("appState", encryptState);
+};
+
+const applyState = (state) => {
+  if (state) {
+    const themeToggleBtn = document.getElementById("theme-toggle");
+    if (state.theme === "dark") {
+      document.body.className = "dark";
+      themeToggleBtn.textContent = "Switch to dark";
+      themeToggleBtn.classList.add("dark");
+      themeToggleBtn.classList.remove("light");
+    } else {
+      document.body.className = "light";
+      themeToggleBtn.textContent = "Switch to light";
+      themeToggleBtn.classList.add("light");
+      themeToggleBtn.classList.remove("dark");
+    }
+    const labelSelect = document.getElementById("labelSelect");
+    if (state.lang === "en") {
+      labelSelect.textContent = "Select language";
+      themeToggleBtn.textContent = `Switch to ${
+        state.theme === "dark" ? "light" : "dark"
+      }`;
+    } else {
+      labelSelect.textContent = "Seleccione el idioma";
+      themeToggleBtn.textContent = `Cambiar a ${
+        state.theme === "dark" ? "Claro" : "Oscuro"
+      }`;
+    }
+    document.getElementById("language").value = state.lang;
+  }
+};
+
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const state = loadState();
+  if (state) {
+    state.theme = state.theme === "dark" ? "light" : "dark";;
+    updateState(state);
+    applyState(state);
+  }
+});
+
+document.getElementById("language").addEventListener("change", (e) => {
+  const state = loadState();
+  if (state) {
+    state.lang = e.target.value;
+    updateState(state);
+    applyState(state);
+  }
+});
+
+const autoRemoveOldData = () => {
+  const state = loadState();
+  if (state) {
+    const currTime = new Date().getTime();
+    const timeDiff = currTime - state.lastUpdate;
+    const maxAllowAge = 1000 * 60;
+
+    if (timeDiff > maxAllowAge) {
+      localStorage.removeItem("appState");
+      console.log("old srtorage remove from");
+      init();
+    }
+  }
+};
+
+window.addEventListener("storage", (e) => {
+  if (e.key === "appState") {
+    applyState(loadState());
+  }
+});
+
+init();
+autoRemoveOldData();
