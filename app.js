@@ -27,36 +27,50 @@ const WeatherStation = {
   generateForecast() {
     let forecast = "";
     let icon = "";
-    if (this.temperature > 20 && this.humidity < 50 && this.pressure > 1013) {
-      forecast = "Clear Sky";
-      icon = "https://cdn.weatherbit.io/static/img/icons/c01d.png";
-    } else if (this.humidity > 70 && this.pressure < 1013) {
-      if (this.temperature < 0) {
-        forecast = "Snowfall";
-        icon = "https://cdn.weatherbit.io/static/img/icons/s02d.png";
-      } else if (this.temperature > 0) {
+    const conditions = {
+      clearSky:
+        this.temperature > 20 && this.humidity < 50 && this.pressure > 1013,
+      rain: this.humidity > 75 && this.pressure < 1013 && this.temperature >= 0,
+      thunderstorm:
+        this.temperature > 15 && this.humidity > 70 && this.pressure < 1013,
+      snowfall:
+        this.humidity > 70 && this.pressure < 1013 && this.temperature < 0,
+      fog: this.humidity > 90 && this.temperature < 0,
+      mainlyClear: this.humidity <= 30 && this.pressure >= 1020,
+    };
+
+    const weatherCondition = Object.keys(conditions).find(
+      (key) => conditions[key]
+    );
+
+    switch (weatherCondition) {
+      case "clearSky":
+        forecast = "Clear Sky";
+        icon = "https://cdn.weatherbit.io/static/img/icons/c01d.png";
+        break;
+      case "rain":
         forecast = "Rain";
         icon = "https://cdn.weatherbit.io/static/img/icons/d02d.png";
-      }
-    } else if (this.humidity > 90 && this.temperature < 0) {
-      forecast = "Fog";
-      icon = "https://cdn.weatherbit.io/static/img/icons/f01d.png";
-    } else if (this.humidity > 90 && this.temperature > 0) {
-      forecast = "Rain";
-      icon = "https://cdn.weatherbit.io/static/img/icons/d02d.png";
-    } else if (
-      this.temperature > 15 &&
-      this.humidity > 70 &&
-      this.pressure < 1013
-    ) {
-      forecast = "Thunderstorm";
-      icon = "https://cdn.weatherbit.io/static/img/icons/t04d.png";
-    } else if (this.humidity <= 30 && this.pressure >= 1020) {
-      forecast = "Mainly clear";
-      icon = "https://cdn.weatherbit.io/static/img/icons/c02d.png";
-    } else {
-      forecast = "Partly cloudy, or overcast";
-      icon = "https://cdn.weatherbit.io/static/img/icons/c03d.png";
+        break;
+      case "thunderstorm":
+        forecast = "Thunderstorm";
+        icon = "https://cdn.weatherbit.io/static/img/icons/t04d.png";
+        break;
+      case "snowfall":
+        forecast = "Snowfall";
+        icon = "https://cdn.weatherbit.io/static/img/icons/s02d.png";
+        break;
+      case "fog":
+        forecast = "Fog";
+        icon = "https://cdn.weatherbit.io/static/img/icons/f01d.png";
+        break;
+      case "mainlyClear":
+        forecast = "Mainly clear";
+        icon = "https://cdn.weatherbit.io/static/img/icons/c02d.png";
+        break;
+      default:
+        forecast = "Partly cloudy, or overcast";
+        icon = "https://cdn.weatherbit.io/static/img/icons/c03d.png";
     }
     return { forecast, icon };
   },
@@ -119,10 +133,7 @@ const WeatherStation = {
       const geoData = await geoResponse.json();
 
       if (geoData.length === 0) {
-        this.showError(
-          "Місто не знайдено або введене не вірно.",
-          "cityError"
-        );
+        this.showError("Місто не знайдено або введене не вірно.", "cityError");
         return;
       }
 
