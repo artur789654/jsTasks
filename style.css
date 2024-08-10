@@ -1,0 +1,77 @@
+*{
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #eee;
+  font-size: 16px;
+}
+
+.container{
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+button{
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: all .3s ease;
+}
+button:hover{
+  background-color: #0056b3;
+}
+.cards{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.card{
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  justify-content: start;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  max-width: 250px;
+  width: 100%;
+  max-height: 350px;
+  transition: all .3s ease;
+}
+.card:hover{
+  transform: scale(1.05);
+}
+.prod-img {
+  max-width: 100%;
+  max-height: 40%;
+}
+
+.prod-img img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: cover;
+}
+.prod-desc{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.error-message {
+  color: red;
+  margin-top: 5px;
+}
