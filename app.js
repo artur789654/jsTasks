@@ -1,66 +1,140 @@
-// Створіть змінну, яка зберігає ім'я користувача. Виведіть значення цієї змінної в консоль.
-// Створіть змінну, яка зберігає вік користувача. Перетворіть цю змінну на рядок і виведіть тип цієї змінної в консоль.
-// Створіть змінну, яка зберігає число "10" і додайте до нього рядок "20". Виведіть результат і його тип.
-
-const nameCharacter = "Petro";
-let ageCharacter = 24;
-let num = 10 + "hey";
-console.log(nameCharacter, ageCharacter, typeof num);
-// Створіть об'єкт, який представляє книгу з властивостями title, author та year.
-// Додайте нову властивість genre до об'єкта книги.
-// Видаліть властивість year з об'єкта книги.
-const book = { title: "Kobzar", author: "Taras Shevchenko", year: 1840 };
-book.genre = "poetry";
-delete book.year;
-console.log(book);
-// Напишіть функцію, яка приймає два числа і повертає їх суму.
-// Напишіть функцію, яка приймає рядок і повертає його в верхньому регістрі.
-// Напишіть функцію, яка приймає масив чисел і повертає новий масив з квадратами цих чисел.
-const sum = (a, b)=> a + b;
-console.log(sum(2, 5));
-
-const toUpCase =(str)=> str.toUpperCase();
-console.log(toUpCase("asafsa"));
-
-const sqrt=(arr)=>  arr.map((v) => v * v);
-console.log(sqrt([2, 3, 4, 5, 67]));
-
-// Створіть масив з трьох імен. Додайте нове ім'я до кінця масиву і виведіть його.
-// Видаліть перший елемент масиву і виведіть його.
-// Знайдіть індекс елемента зі значенням "John" в масиві ["Mike", "John", "Sara"].
-const arr = ["Mike", "John", "Sara"];
-arr.push("Hanry");
-arr.shift();
-console.log(
-  arr,
-  arr.findIndex((i) => i == "John")
-);
-
-// Створіть проміс, який резолвиться через 2 секунди з повідомленням "Promise resolved!".
-// Використовуйте then для виведення повідомлення, коли проміс буде резолвлено.
-// Створіть проміс, який відхиляється з помилкою "Promise rejected!" та обробіть цю помилку за допомогою catch.
-let prom = new Promise(function (resolve, reject) {
-  setTimeout(() => resolve("Promise resolved!"), 2000);
-  // reject(new Error("promise rejected"));
-});
-prom
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error.message));
-// Створіть асинхронну функцію, яка повертає "Hello, World!" через 1 секунду.
-// Викличте цю функцію і виведіть результат в консоль.
-// Використовуйте try/catch для обробки помилки в асинхронній функції, яка кидає помилку.
-const sayHello= async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
+if (navigator.serviceWorker.controller) {
+  console.log(`Servive Worker is active and cotroll page`);
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    if (e.data.type === "CACHE_ERROR") {
+      dissplayError(e.data.message);
+    }
+    if (e.data.type === "METRICS") {
+      const { metrics } = e.data;
+      document.getElementById(
+        "cacheHits"
+      ).textContent = `Cache Hits: ${metrics.cacheHits}`;
+      document.getElementById(
+        "cacheMisses"
+      ).textContent = `Cache Misses: ${metrics.cacheMisses}`;
+    }
   });
 }
-const execute= async ()=> {
-  try {
-    console.log(await sayHello());
-  } catch (error) {
-    console.log(error);
-  }
+
+const connectionType = navigator.connection
+  ? navigator.connection.effectiveType
+  : "4g";
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then((registration) => {
+        if (registration.active) {
+          registration.active.postMessage({
+            type: "SET_CONNECTION_TYPE",
+            connectionType,
+          });
+        } else {
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage({
+                type: "SET_CONNECTION_TYPE",
+                connectionType,
+              });
+            }
+          });
+        }
+        console.log(connectionType);
+        console.log("Service Worker зареєстровано:", registration);
+      })
+      .catch((e) => {
+        console.log("Помилка реєстрації Service Worker:", e);
+      });
+  });
 }
-execute();
+
+document.getElementById("fetchData").addEventListener("click", () => {
+  fetch("https://dummyjson.com/products")
+    .then((res) => res.json())
+    .then((data) => {
+      const apiData = document.getElementById("apiData");
+      apiData.innerHTML = "";
+      // console.log(data);
+      data.products.forEach((product) => {
+        const productDiv = document.createElement("div");
+        productDiv.classList.add("card");
+
+        productDiv.innerHTML = `
+        <div class="prod-img">
+          <img src="${product.images[0]}" alt="${
+          product.title
+        }" loading="lazy"/>
+        </div>
+        <div class ="prod-desc">
+          <h2>${product.title}</h2>
+          <p><strong>Price:</strong> $${product.price}</p>
+          <p><strong>Category:</strong> ${product.category}</p>
+          <p><strong>Description:</strong> ${
+            product.description.length > 40
+              ? product.description.slice(0, 40) + "..."
+              : product.description
+          }</p>
+        </div>
+      `;
+        apiData.appendChild(productDiv);
+      });
+    })
+    .catch((e) => {
+      console.log("Помилка отримання даних з API:", e);
+      const apiData = document.getElementById("apiData");
+      apiData.innerHTML = `<h2>Do not visit download data. Please try again later.</h2>`;
+    });
+});
+
+const resourceUrl = document.getElementById("resourceUrl");
+const errorMessage = document.getElementById("errorMessage");
+const dissplayError = (message) => {
+  errorMessage.textContent = message;
+  setTimeout(() => {
+    errorMessage.textContent = "";
+  }, 5000);
+};
+
+document.getElementById("addToCache").addEventListener("click", () => {
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "ADD_TO_CACHE",
+      url: resourceUrl.value,
+    });
+  } else {
+    dissplayError("Service Worker не активний. Спробуйте пізніше.");
+  }
+});
+
+document.getElementById("removeFromCache").addEventListener("click", () => {
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "REMOVE_FROM_CACHE",
+      url: resourceUrl.value,
+    });
+  } else {
+    console.log(`Service work not active`);
+    dissplayError("Service Worker не активний. Спробуйте пізніше.");
+  }
+});
+
+document.getElementById("updateCache").addEventListener("click", () => {
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "UPDATE_CACHE",
+      url: resourceUrl.value,
+    });
+  } else {
+    console.log(`Service work not active`);
+    dissplayError("Service Worker не активний. Спробуйте пізніше.");
+  }
+});
+
+document.getElementById("getMetrics").addEventListener("click", () => {
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: "GET_METRICS" });
+  } else {
+    console.log(`Service work not active`);
+  }
+});

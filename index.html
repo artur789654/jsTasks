@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+    <div class="container">
+      <div id="content">
+        <button id="fetchData">Get products</button>
+        <div id="apiData" class="cards"></div>
+      </div>
+      <div class="controlCache">
+        <input type="url" id="resourceUrl" placeholder="Enter resource URL">
+        <div id="errorMessage" class="error-message"></div>
+        <button id="addToCache">Add to Cache</button>
+        <button id="removeFromCache">Remove from Cache</button>
+        <button id="updateCache">Update Cache</button>
+      </div>
+      <div id="metrics">
+        <p id="cacheHits">Cache Hits: 0</p>
+        <p id="cacheMisses">Cache Misses: 0</p>
+        <button id="getMetrics">Get metrics</button>
+      </div>
+    </div>
+</body>
+</html>
